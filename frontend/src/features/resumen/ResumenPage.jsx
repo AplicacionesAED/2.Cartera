@@ -97,8 +97,8 @@ const RANGOS_TENDENCIA = [
 ];
 const FILTROS_PORCENTAJE = [
   { key: 'ambos', label: 'Ambos' },
-  { key: 'inicial', label: 'Cuota inicial (30%)' },
-  { key: 'contraentrega', label: 'Saldo contraentrega (70%)' },
+  { key: 'inicial', label: 'Cuota inicial' },
+  { key: 'contraentrega', label: 'Crédito' },
 ];
 const VISTAS_LINEA = [
   { key: 'ambos', label: 'Ambos' },
@@ -322,30 +322,48 @@ export function ResumenPage() {
   const hayFiltrosUbicacion = etapaFilter.length > 0 || frenteFilter.length > 0 || torreFilter.length > 0;
   const limpiarFiltrosUbicacion = () => { setEtapaFilter([]); setFrenteFilter([]); setTorreFilter([]); };
 
+  // Meses y días de la gráfica: los del plan de pagos de Zoho (esperado) más los de los pagos de la fiducia (recaudado),
+  // porque los negocios sin plan solo aportan recaudado.
+  const mesesSerie = useMemo(
+    () => [...new Set([...(planRecaudo?.meses ?? []), ...Object.keys(planRecaudo?.recaudoFiducia?.meses ?? {})])].sort(),
+    [planRecaudo]
+  );
+  const diasSerie = useMemo(
+    () => [...new Set([...(planRecaudo?.dias ?? []), ...Object.keys(planRecaudo?.recaudoFiducia?.dias ?? {})])].sort(),
+    [planRecaudo]
+  );
+  // Qué parte del recaudo de la fiducia muestra cada vista: todo, la cuota inicial o el crédito (como el Consolidado).
+  const claveRecaudo = filtroPorcentaje === 'inicial' ? 'cuotaInicial' : filtroPorcentaje === 'contraentrega' ? 'credito' : 'total';
+  // Esperado y por recaudar siguen siendo los del plan; el recaudado es el de la fiducia.
+  const conRecaudoFiducia = (planSerie, fiduciaSerie, claves) => Object.fromEntries(claves.map((k) => [k, {
+    esperado: planSerie?.[k]?.esperado ?? 0,
+    porRecaudar: planSerie?.[k]?.porRecaudar ?? 0,
+    recaudado: fiduciaSerie?.[k]?.[claveRecaudo] ?? 0,
+  }]));
+
   const aniosDisponibles = useMemo(() => {
-    const anios = new Set((planRecaudo?.meses ?? []).map((m) => Number(m.slice(0, 4))));
+    const anios = new Set(mesesSerie.map((m) => Number(m.slice(0, 4))));
     return [...anios].sort((a, b) => a - b);
-  }, [planRecaudo]);
+  }, [mesesSerie]);
 
   const granularidadTendencia = rangoTendencia === 'ultimoMes' ? 'dia' : rangoTendencia === 'ultimoSemestre' ? 'quincena' : 'mes';
 
   const mesesTendencia = useMemo(() => {
-    const listaMeses = planRecaudo?.meses ?? [];
+    const listaMeses = mesesSerie;
     if (rangoTendencia === 'anio') return listaMeses.filter((m) => m.startsWith(`${anioSeleccionado}-`));
     const opt = RANGOS_TENDENCIA.find((r) => r.key === rangoTendencia);
     if (!opt?.meses) return listaMeses;
     const desde = restarMeses(mesKeyDeHoy(), opt.meses - 1);
     const hasta = mesKeyDeHoy();
     return listaMeses.filter((m) => m >= desde && m <= hasta);
-  }, [planRecaudo, rangoTendencia, anioSeleccionado]);
+  }, [mesesSerie, rangoTendencia, anioSeleccionado]);
 
   const diasTendencia = useMemo(() => {
     if (granularidadTendencia !== 'dia') return [];
-    const dias = planRecaudo?.dias ?? [];
     const hasta = diaKeyDeHoy();
     const desde = restarDias(hasta, 29);
-    return dias.filter((d) => d >= desde && d <= hasta);
-  }, [planRecaudo, granularidadTendencia]);
+    return diasSerie.filter((d) => d >= desde && d <= hasta);
+  }, [diasSerie, granularidadTendencia]);
 
   const quincenas = useMemo(() => {
     if (granularidadTendencia !== 'quincena') return [];
@@ -366,35 +384,32 @@ export function ResumenPage() {
   const totalesQuincena = useMemo(() => {
     if (granularidadTendencia !== 'quincena' || quincenas.length === 0) return {};
     const fuente = filtroPorcentaje === 'inicial' ? planRecaudo?.totalesDiaInicial : filtroPorcentaje === 'contraentrega' ? planRecaudo?.totalesDiaContraentrega : planRecaudo?.totalesDia;
-    const dias = planRecaudo?.dias ?? [];
     const out = {};
     for (const q of quincenas) {
       let esperado = 0, recaudado = 0, porRecaudar = 0;
-      for (const d of dias) {
+      for (const d of diasSerie) {
         if (d >= q.desde && d <= q.hasta) {
           esperado += fuente?.[d]?.esperado ?? 0;
-          recaudado += fuente?.[d]?.recaudado ?? 0;
+          recaudado += planRecaudo?.recaudoFiducia?.dias?.[d]?.[claveRecaudo] ?? 0;
           porRecaudar += fuente?.[d]?.porRecaudar ?? 0;
         }
       }
       out[q.key] = { esperado, recaudado, porRecaudar };
     }
     return out;
-  }, [planRecaudo, quincenas, filtroPorcentaje, granularidadTendencia]);
+  }, [planRecaudo, quincenas, filtroPorcentaje, granularidadTendencia, diasSerie, claveRecaudo]);
 
   const puntosTendencia = granularidadTendencia === 'dia' ? diasTendencia : granularidadTendencia === 'quincena' ? quincenas.map((q) => q.key) : mesesTendencia;
 
   const totalesElegidos = useMemo(() => {
     if (granularidadTendencia === 'quincena') return totalesQuincena;
     if (granularidadTendencia === 'dia') {
-      if (filtroPorcentaje === 'inicial') return planRecaudo?.totalesDiaInicial ?? {};
-      if (filtroPorcentaje === 'contraentrega') return planRecaudo?.totalesDiaContraentrega ?? {};
-      return planRecaudo?.totalesDia ?? {};
+      const plan = filtroPorcentaje === 'inicial' ? planRecaudo?.totalesDiaInicial : filtroPorcentaje === 'contraentrega' ? planRecaudo?.totalesDiaContraentrega : planRecaudo?.totalesDia;
+      return conRecaudoFiducia(plan, planRecaudo?.recaudoFiducia?.dias, diasSerie);
     }
-    if (filtroPorcentaje === 'inicial') return planRecaudo?.totalesInicial ?? {};
-    if (filtroPorcentaje === 'contraentrega') return planRecaudo?.totalesContraentrega ?? {};
-    return planRecaudo?.totales ?? {};
-  }, [planRecaudo, filtroPorcentaje, granularidadTendencia, totalesQuincena]);
+    const plan = filtroPorcentaje === 'inicial' ? planRecaudo?.totalesInicial : filtroPorcentaje === 'contraentrega' ? planRecaudo?.totalesContraentrega : planRecaudo?.totales;
+    return conRecaudoFiducia(plan, planRecaudo?.recaudoFiducia?.meses, mesesSerie);
+  }, [planRecaudo, filtroPorcentaje, granularidadTendencia, totalesQuincena, diasSerie, mesesSerie, claveRecaudo]);
 
   const kpisActuales = useMemo(() => {
     const t = planRecaudo?.totalesColumnasFijas;
@@ -553,12 +568,12 @@ export function ResumenPage() {
           <div className={styles.tendenciaHeaderTop}>
             <h2 className={styles.tendenciaTitulo}>
               Plan de pagos vs. Recaudo — tendencia
-              <InfoTooltip text="Compara lo esperado según el plan de pagos de Zoho contra lo efectivamente recaudado (pagos de la fiducia). Incluye periodos futuros del plan." />
+              <InfoTooltip text="Compara lo esperado según el plan de pagos de Zoho (por la fecha de cada cuota) contra lo recaudado según la fiducia (pagos de los negocios vendidos, por la fecha del pago). Las vistas Cuota inicial y Crédito reparten el recaudo igual que el Consolidado: lo pagado cubre primero la cuota inicial. Los negocios sin plan de pagos solo aportan recaudado. Incluye periodos futuros del plan." />
             </h2>
             <div className={styles.tendenciaHeaderAcciones}>
               {resumenStats && (
                 <span className={styles.tendenciaStats}>
-                  Recaudado en el año <InfoTooltip text="Suma de lo recaudado en los meses del año actual: pagos de la fiducia de todos los negocios, por la fecha del pago. No cambia con los filtros de periodo ni de ubicación." /><strong>{fmtMoney(resumenStats.recaudoAnio)}</strong>
+                  Recaudado en el año <InfoTooltip text="Suma de lo recaudado en los meses del año actual: pagos de la fiducia de los negocios vendidos, por la fecha del pago. No cambia con los filtros de periodo ni de ubicación." /><strong>{fmtMoney(resumenStats.recaudoAnio)}</strong>
                   <span className={styles.puntoSep}>·</span>
                   Separaciones este mes <InfoTooltip text="Cantidad de oportunidades de Zoho cuya fecha de Pago de separación cae dentro del mes actual." /><strong>{resumenStats.separacionesMes}</strong>
                 </span>

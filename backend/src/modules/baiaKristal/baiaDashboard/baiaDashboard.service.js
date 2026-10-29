@@ -237,6 +237,27 @@ async function construirFilasCompletas() {
       const ci = ciKey ? parseMonto(negocio.datos[ciKey]) : NaN;
       if (!isNaN(ci)) cuotaInicialFiduciaResumen = ci;
     }
+    // Pagos de la fiducia por mes y por día para la gráfica del Resumen (misma normalización de la conciliación): lo pagado
+    // cubre primero la cuota inicial de la fiducia y lo que sobra es crédito, igual que en el Consolidado.
+    const recaudoFiduciaPorMes = {};
+    const recaudoFiduciaPorDia = {};
+    if (negocio) {
+      const cuotaInicialTope = cuotaInicialFiduciaResumen ?? 0;
+      const cubierto = (acumulado) => Math.min(Math.max(acumulado, 0), cuotaInicialTope);
+      let acumulado = 0;
+      for (const pago of normalizarPagos(movimientosPorNegocioId.get(negocio.id) || [])) {
+        const antes = acumulado;
+        acumulado += pago.valor;
+        if (!pago.fecha) continue;
+        const aCuotaInicial = cubierto(acumulado) - cubierto(antes);
+        for (const [mapa, clave] of [[recaudoFiduciaPorMes, mesKey(pago.fecha)], [recaudoFiduciaPorDia, diaKey(pago.fecha)]]) {
+          const t = mapa[clave] ?? (mapa[clave] = { total: 0, cuotaInicial: 0, credito: 0 });
+          t.total += pago.valor;
+          t.cuotaInicial += aCuotaInicial;
+          t.credito += pago.valor - aCuotaInicial;
+        }
+      }
+    }
     if (fechaSaldoContraentrega == null && fechaConfigurada) fechaSaldoContraentrega = fechaConfigurada;
 
     return {
@@ -256,6 +277,8 @@ async function construirFilasCompletas() {
       valorSaldoContraentrega,
       totalAbonado,
       recaudoFiducia,
+      recaudoFiduciaPorMes,
+      recaudoFiduciaPorDia,
       opportunityId: oportunidad?.id ?? null,
       cuotasEnMora,
       montoEnMora,
@@ -392,6 +415,14 @@ async function obtenerDashboardRecaudo({ search, etapa, frente, torre, conMovimi
     ventasFiducia: 0, cuotasInicialesFiducia: 0, recaudadoFiducia: 0, recaudadoCuotaInicialFiducia: 0, pendienteFiducia: 0, pendienteCuotaInicialFiducia: 0, pendienteCreditoFiducia: 0,
   };
   const fiduciaPorEtapa = new Map();
+  const recaudoFiduciaMeses = {};
+  const recaudoFiduciaDias = {};
+  const sumarSerie = (destino, origen) => {
+    for (const [clave, v] of Object.entries(origen)) {
+      const t = destino[clave] ?? (destino[clave] = { total: 0, cuotaInicial: 0, credito: 0 });
+      t.total += v.total; t.cuotaInicial += v.cuotaInicial; t.credito += v.credito;
+    }
+  };
   for (const f of filas) {
     if (f.valorInmueble != null) totalesColumnasFijas.valorInmueble += f.valorInmueble;
     if (f.valorCuotaInicial != null) totalesColumnasFijas.valorCuotaInicial += f.valorCuotaInicial;
@@ -419,6 +450,8 @@ async function obtenerDashboardRecaudo({ search, etapa, frente, torre, conMovimi
         acum.cuotaInicial += aporte.cuotaInicial;
         acum.pagadoCuotaInicial += aporte.pagadoCuotaInicial;
         fiduciaPorEtapa.set(f.etapa, acum);
+        sumarSerie(recaudoFiduciaMeses, f.recaudoFiduciaPorMes);
+        sumarSerie(recaudoFiduciaDias, f.recaudoFiduciaPorDia);
       }
     } else {
       if (f.precioUnitario != null) totalesColumnasFijas.valorDisponible += f.precioUnitario;
@@ -501,13 +534,15 @@ async function obtenerDashboardRecaudo({ search, etapa, frente, torre, conMovimi
   const total = filas.length;
   const pageNum = Math.max(1, page);
   const limitNum = Math.max(1, limit);
-  const data = filas.slice((pageNum - 1) * limitNum, pageNum * limitNum).map(({ _tieneMovimientos, porDia, porDiaInicial, porDiaContraentrega, ...fila }) => fila);
+  const data = filas.slice((pageNum - 1) * limitNum, pageNum * limitNum).map(({ _tieneMovimientos, porDia, porDiaInicial, porDiaContraentrega, recaudoFiduciaPorMes, recaudoFiduciaPorDia, ...fila }) => fila);
 
   return {
     data,
     meses, totales, totalesInicial, totalesContraentrega,
     dias, totalesDia, totalesDiaInicial, totalesDiaContraentrega,
     totalesColumnasFijas,
+    // Recaudo de la fiducia por mes y por día de los negocios vendidos (total, cuota inicial y crédito): la serie de recaudado de la gráfica.
+    recaudoFiducia: { meses: recaudoFiduciaMeses, dias: recaudoFiduciaDias },
     totalesPorEtapa: totalesEtapa,
     pagination: { total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) },
     etapasDisponibles: [...valores.porEtapa.keys()].sort(compararEtapas),
@@ -858,9 +893,9 @@ async function obtenerResumenStats() {
     Oportunidad.count({ where: { pago_separacion: { [Op.gte]: new Date(anio, mes, 1), [Op.lt]: new Date(anio, mes + 1, 1) } } }),
   ]);
 
-  const recaudoAnio = dash.meses
-    .filter((m) => m.startsWith(String(anio)))
-    .reduce((s, m) => s + (dash.totales[m]?.recaudado ?? 0), 0);
+  const recaudoAnio = Object.entries(dash.recaudoFiducia.meses)
+    .filter(([m]) => m.startsWith(String(anio)))
+    .reduce((suma, [, v]) => suma + v.total, 0);
 
   return { recaudoAnio, separacionesMes };
 }

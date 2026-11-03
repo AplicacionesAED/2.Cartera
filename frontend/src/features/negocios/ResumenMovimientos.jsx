@@ -44,7 +44,7 @@ export function ResumenMovimientos({ resumen, totalMovimientos }) {
         <div className={styles.dato}>
           <dt className={styles.datoEtiqueta}>
             <span className={`${styles.icono} ${styles.iconoEntra}`}><ArrowDownLeft size={15} strokeWidth={2} aria-hidden="true" /></span>
-            Entra
+            Recibido en fiducia
           </dt>
           <dd className={styles.datoValor}>{formatCOP(ingresos) ?? '$ 0'}</dd>
           <dd className={styles.datoSub}>{plural(nIngresos, 'movimiento', 'movimientos')}</dd>
@@ -53,7 +53,7 @@ export function ResumenMovimientos({ resumen, totalMovimientos }) {
         <div className={styles.dato}>
           <dt className={styles.datoEtiqueta}>
             <span className={`${styles.icono} ${styles.iconoSale}`}><ArrowUpRight size={15} strokeWidth={2} aria-hidden="true" /></span>
-            Sale
+            Retirados de fiducia
           </dt>
           <dd className={styles.datoValor}>{egresos < 0 ? formatCOP(salidas) : <span className={styles.vacio}>Sin salidas</span>}</dd>
           <dd className={styles.datoSub}>{egresos < 0 ? plural(nEgresos, 'movimiento', 'movimientos') : ' '}</dd>

@@ -20,7 +20,7 @@ también el build del frontend. No hay entidad central tipo "perfil": cada módu
 
 ## Reglas de trabajo (importantes)
 
-- Commits en español, autor `GEliasDev <GEliasDev@users.noreply.github.com>`, **sin** trailer ni mención a Claude. Nunca
+- Commits en español, autor `GEliasDev <gvaldelamar2003@outlook.com>`, **sin** trailer ni mención a Claude. Nunca
   `git push` (lo hace el usuario). Hacer commit tras cada cambio terminado; `git add` de archivos específicos.
 - Nunca editar `.env` ni escribir credenciales. **La BD local = producción**: consultas de prueba en solo lectura salvo que la
   tarea exija escribir. No disparar syncs reales de Zoho/HubSpot sin necesidad.

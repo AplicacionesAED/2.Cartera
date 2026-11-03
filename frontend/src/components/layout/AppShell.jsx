@@ -6,7 +6,7 @@
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { ReactLenis } from 'lenis/react';
-import { ChevronRight, Building2, Home, Layers, Settings } from 'lucide-react';
+import { ChevronRight, Building2, Home, Layers, Menu, Settings } from 'lucide-react';
 import { UserMenu } from './UserMenu.jsx';
 import { ErrorBoundary } from '../ErrorBoundary.jsx';
 import { useAuth } from '../../auth/AuthContext.jsx';
@@ -101,13 +101,26 @@ function encontrarItemActivo(pathname) {
   return mejor;
 }
 
+// Pantallas de trabajo denso (listados, detalles, hojas de fiducia, dashboards): el sidebar se oculta para ganar
+// ancho y se abre encima del contenido con el boton de menu del topbar. Se oculta en flujos completos (lista +
+// detalle) para que el layout no salte al navegar entre ellos. Quedan con sidebar fijo: Inicio y /accesos/*.
+const RUTAS_SIN_SIDEBAR = [
+  /^\/(oliv\/)?(oportunidades|negocios|cartera-mora|dashboard|resumen)(\/.*)?$/,
+  /^\/otrosies$/,
+  /^\/inventario(\/.*)?$/,
+  /^\/fiducia(\/.*)?$/,
+  /^\/oliv\/(inmuebles|encargos)(\/.*)?$/,
+];
+
 export function AppShell() {
   const location = useLocation();
   const { usuario } = useAuth();
   const [openGroup, setOpenGroup] = useState(null);
+  const [menuAbierto, setMenuAbierto] = useState(false);
   const navRef = useRef(null);
   const closeTimerRef = useRef(null);
 
+  const ocultarSidebar = RUTAS_SIN_SIDEBAR.some((re) => re.test(location.pathname));
   const itemActivo = encontrarItemActivo(location.pathname);
   const activeGroupTitle = itemActivo?.grupoTitulo;
 
@@ -147,9 +160,30 @@ export function AppShell() {
 
   useEffect(() => cancelScheduledClose, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // El menu flotante se cierra al cambiar de pantalla y con Escape.
+  useEffect(() => setMenuAbierto(false), [location.pathname]);
+  useEffect(() => {
+    if (!menuAbierto) closeNow();
+  }, [menuAbierto]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!menuAbierto) return undefined;
+    const alTeclear = (e) => e.key === 'Escape' && setMenuAbierto(false);
+    window.addEventListener('keydown', alTeclear);
+    return () => window.removeEventListener('keydown', alTeclear);
+  }, [menuAbierto]);
+
   return (
-    <div className={styles.shell}>
-      <aside className={styles.sidebar}>
+    <div className={`${styles.shell} ${ocultarSidebar ? styles.shellSinSidebar : ''}`}>
+      {ocultarSidebar && (
+        <button
+          type="button"
+          className={`${styles.backdrop} ${menuAbierto ? styles.backdropAbierto : ''}`}
+          aria-label="Cerrar menú"
+          tabIndex={menuAbierto ? 0 : -1}
+          onClick={() => setMenuAbierto(false)}
+        />
+      )}
+      <aside className={`${styles.sidebar} ${ocultarSidebar ? `${styles.sidebarFlotante} ${menuAbierto ? styles.sidebarAbierto : ''}` : ''}`}>
         <div className={styles.brand}>
           <img className={styles.brandLogo} src={`${import.meta.env.BASE_URL}aed-logo.png`} alt="aed" />
           <span className={styles.brandDivider} aria-hidden="true" />
@@ -170,6 +204,7 @@ export function AppShell() {
           <NavLink
             to="/"
             end
+            onClick={closeNow}
             className={({ isActive }) => `${styles.navGroupButton} ${isActive ? styles.navGroupButtonActive : ''}`}
           >
             <span className={styles.navGroupLabel}>
@@ -229,6 +264,11 @@ export function AppShell() {
       </aside>
       <main className={styles.main}>
         <div className={styles.topbar}>
+          {ocultarSidebar && (
+            <button type="button" className={styles.menuToggle} onClick={() => setMenuAbierto((v) => !v)} aria-label="Abrir menú" aria-expanded={menuAbierto}>
+              <Menu size={20} strokeWidth={ICON_STROKE_WIDTH} aria-hidden="true" />
+            </button>
+          )}
           {crumb && (
             <nav className={styles.crumb} aria-label="Ubicación">
               {crumb.group && (

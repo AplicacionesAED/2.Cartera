@@ -78,7 +78,25 @@ function parseCompradoresCell(rawNombre, rawNroId, rawPct) {
   if (!rawNombre || String(rawNombre).trim() === '') return [];
   const s = String(rawNombre).replace(/[\r\n]/g, ' ').trim();
 
-  const pctPattern = /\((\d+\.?\d*)%\)/g;
+  // Fiducia a veces junta a todos en una sola celda separados por "|" ("A (.00%)|B (.00%)|BANCO"), con las cédulas
+  // también unidas por "|" y en el mismo orden. El porcentaje puede venir sin entero ("(.00%)"); 0 = sin dato.
+  const partes = s.split('|').map((t) => t.trim()).filter(Boolean);
+  if (partes.length > 1) {
+    const ids = rawNroId != null ? String(rawNroId).split('|').map((t) => t.trim()) : [];
+    return partes
+      .map((parte, i) => {
+        const pctMatch = parte.match(/\s*\((\d*\.?\d+)%\)\s*$/);
+        const pct = pctMatch ? parseFloat(pctMatch[1]) : null;
+        const texto = pctMatch ? parte.slice(0, pctMatch.index).trim() : parte;
+        const idMatch = texto.match(/^(\d{4,12})\s+([\s\S]+)/);
+        const nombre = (idMatch ? idMatch[2] : texto).replace(/\s+/g, ' ').trim();
+        const nroId = idMatch ? idMatch[1] : ids[i] || null;
+        return nombre ? { nombre, nroId, porcentaje: pct || null } : null;
+      })
+      .filter(Boolean);
+  }
+
+  const pctPattern = /\((\d*\.?\d+)%\)/g;
   const segments = [];
   let lastEnd = 0;
   let m;

@@ -117,7 +117,13 @@ export function MovimientoRow({ mov }) {
                         {etiquetaCampoMovimiento(col)}
                         <ConceptoHint columna={col} hoja="movimiento" />
                       </p>
-                      <p className={styles.miniValor}>{display ?? <span className={styles.sinDato}>—</span>}</p>
+                      <p className={styles.miniValor}>
+                        {display == null
+                          ? <span className={styles.sinDato}>—</span>
+                          : display.includes('|')
+                            ? display.split('|').map((parte, i) => <span key={i} className={styles.miniLinea}>{parte.trim()}</span>)
+                            : display}
+                      </p>
                     </div>
                   );
                 })}

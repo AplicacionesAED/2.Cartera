@@ -136,6 +136,10 @@ a.referencia:hover {
   overflow-wrap: anywhere;
 }
 
+.miniLinea {
+  display: block;
+}
+
 .sinDato {
   color: var(--color-border-strong);
 }

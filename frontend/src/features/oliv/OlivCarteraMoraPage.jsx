@@ -391,28 +391,32 @@ export function OlivCarteraMoraPage() {
                         </tr>
                       ) : (
                         <tr>
+                          <th aria-sort={ariaSort(sort, 'fechaContrato')}><SortHeader label="Fecha de venta" sortKey="fechaContrato" sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'estado')}><SortHeader label="Etapa" sortKey="estado" sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'torre')}><SortHeader label="Torre" sortKey="torre" sort={sort} onSort={toggleSort} /></th>
                           <th aria-sort={ariaSort(sort, 'unidad')}><SortHeader label="Nomenclatura" sortKey="unidad" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'vista')}><SortHeader label="Vista" sortKey="vista" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'referenciaRecaudo')}><SortHeader label="Encargo" sortKey="referenciaRecaudo" sort={sort} onSort={toggleSort} /></th>
                           <th aria-sort={ariaSort(sort, 'area')}><SortHeader label="Área (m²)" sortKey="area" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'comprador')}><SortHeader label="Propietarios" sortKey="comprador" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'fechaContrato')}><SortHeader label="Fecha contrato" sortKey="fechaContrato" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'fechaSaldoContraentrega')}><SortHeader label="Fecha últ. pago" sortKey="fechaSaldoContraentrega" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'valorInmueble')}><SortHeader label="Valor venta" sortKey="valorInmueble" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'valorM2')}><SortHeader label="Valor m²" sortKey="valorM2" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'valorCuotaInicial')}><SortHeader label="Cuota inicial" sortKey="valorCuotaInicial" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'credito')}><SortHeader label="Crédito" sortKey="credito" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'totalAbonado')}><SortHeader label="Valor abonado" sortKey="totalAbonado" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'pctRecaudo')}><SortHeader label="% de recaudo" sortKey="pctRecaudo" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'cuotasEnMora')}><SortHeader label="Cuotas mora" sortKey="cuotasEnMora" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'maxDiasAtraso')}><SortHeader label="Días mora" sortKey="maxDiasAtraso" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'montoEnMora')}><SortHeader label="Valor vencido" sortKey="montoEnMora" sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'comprador')}><SortHeader label="Comprador" sortKey="comprador" sort={sort} onSort={toggleSort} /></th>
+                          <th>Tipo de identificación</th>
+                          <th aria-sort={ariaSort(sort, 'identificacion')}><SortHeader label="Identificación" sortKey="identificacion" sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'paisResidencia')}><SortHeader label="País de residencia" sortKey="paisResidencia" sort={sort} onSort={toggleSort} /></th>
+                          <th>Departamento de residencia</th>
+                          <th aria-sort={ariaSort(sort, 'telefono')}><SortHeader label="Teléfono" sortKey="telefono" sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'email')}><SortHeader label="Correo electrónico" sortKey="email" sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'valorInmueble')}><SortHeader label="Valor total del negocio" sortKey="valorInmueble" sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'valorApartamento')}><SortHeader label="Valor total del inmueble" sortKey="valorApartamento" sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'valorParqueadero')}><SortHeader label="Valor del parqueadero" sortKey="valorParqueadero" sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'totalAbonado')}><SortHeader label="Abonado total" sortKey="totalAbonado" sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'pctRecaudo')}><SortHeader label="% recibido total" sortKey="pctRecaudo" sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'porRecibir')}><SortHeader label="Por recibir" sortKey="porRecibir" sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'valorCuotaInicial')}><SortHeader label="Valor de contado" sortKey="valorCuotaInicial" sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'credito')}><SortHeader label="Valor crédito" sortKey="credito" sort={sort} onSort={toggleSort} align="center" /></th>
                         </tr>
                       )}
                     </thead>
                     <tbody>
                       {(meta.data ?? []).length === 0 ? (
-                        <tr><td colSpan={esContraentrega ? 6 : 16} className={styles.sinResultados}>Sin resultados.</td></tr>
+                        <tr><td colSpan={esContraentrega ? 6 : 20} className={styles.sinResultados}>Sin resultados.</td></tr>
                       ) : esContraentrega ? (
                         meta.data.map((f) => (
                           <tr key={f.id} onClick={(e) => abrirFila(e, f)} onContextMenu={(e) => abrirMenuContextual(e, f)} className={styles.filaCtxMenu}>
@@ -427,22 +431,26 @@ export function OlivCarteraMoraPage() {
                       ) : (
                         meta.data.map((f) => (
                           <tr key={f.id} onClick={(e) => abrirFila(e, f)} onContextMenu={(e) => abrirMenuContextual(e, f)} className={styles.filaCtxMenu}>
+                            <td className={styles.numCellCentro}>{formatDate(f.fechaContrato)}</td>
+                            <td>{f.estado ?? '—'}</td>
+                            <td>{f.torre ?? '—'}</td>
                             <td><Link to={`/oliv/negocios/${f.id}`}>{f.unidad ?? f.id}</Link></td>
-                            <td>{f.vista ?? '—'}</td>
-                            <td>{f.referenciaRecaudo ?? ''}</td>
                             <td className={styles.numCellCentro}>{f.area != null ? f.area.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}</td>
                             <td className={styles.truncar} title={f.comprador ?? ''}>{f.comprador ?? '—'}</td>
-                            <td className={styles.numCellCentro}>{formatDate(f.fechaContrato)}</td>
-                            <td className={styles.numCellCentro}>{formatDate(f.fechaSaldoContraentrega)}</td>
+                            <td>{f.tipoIdentificacion ?? '—'}</td>
+                            <td>{f.identificacion ?? '—'}</td>
+                            <td>{f.paisResidencia ?? '—'}</td>
+                            <td>{f.departamentoResidencia ?? '—'}</td>
+                            <td>{f.telefono ?? '—'}</td>
+                            <td className={styles.truncar} title={f.email ?? ''}>{f.email ?? '—'}</td>
                             <td className={styles.numCellCentro}>{f.valorInmueble != null ? formatCOP(f.valorInmueble) : '—'}</td>
-                            <td className={styles.numCellCentro}>{f.valorM2 != null ? formatCOP(f.valorM2) : '—'}</td>
-                            <td className={styles.numCellCentro}>{f.valorCuotaInicial != null ? formatCOP(f.valorCuotaInicial) : '—'}</td>
-                            <td className={styles.numCellCentro}>{f.credito != null ? formatCOP(f.credito) : '—'}</td>
+                            <td className={styles.numCellCentro}>{f.valorApartamento != null ? formatCOP(f.valorApartamento) : '—'}</td>
+                            <td className={styles.numCellCentro}>{f.valorParqueadero != null ? formatCOP(f.valorParqueadero) : '—'}</td>
                             <td className={styles.numCellCentro}>{formatCOP(f.totalAbonado ?? 0)}</td>
                             <td className={styles.numCellCentro}>{fmtPct(f.pctRecaudo)}</td>
-                            <td className={styles.numCellCentro}>{f.cuotasEnMora}</td>
-                            <td className={styles.numCellCentro}><ChipDias dias={f.maxDiasAtraso} /></td>
-                            <td className={styles.numCellCentro}><ValorVencido valor={f.montoEnMora} /></td>
+                            <td className={styles.numCellCentro}>{f.porRecibir != null ? formatCOP(f.porRecibir) : '—'}</td>
+                            <td className={styles.numCellCentro}>{f.valorCuotaInicial != null ? formatCOP(f.valorCuotaInicial) : '—'}</td>
+                            <td className={styles.numCellCentro}>{f.credito != null ? formatCOP(f.credito) : '—'}</td>
                           </tr>
                         ))
                       )}

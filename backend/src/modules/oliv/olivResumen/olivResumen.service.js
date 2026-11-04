@@ -102,12 +102,26 @@ async function construirFilasCompletas() {
     let pendienteSaldoContraentrega = null;
     let diasAtrasoSaldoContraentrega = null;
     let tieneMovimientos = false;
+    let identificacion = null;
+    let telefono = null;
+    let email = null;
+    let paisResidencia = null;
+    let valorApartamento = null;
+    let valorParqueadero = null;
 
     if (oportunidad) {
       const referencia = oportunidad.referencia_recaudo;
       const fiducia = referencia ? fiduciaPorReferencia.get(referencia) : null;
       tieneMovimientos = (fiducia?.movimientos.length ?? 0) > 0;
       const cotizacion = cotizacionPorOportunidadId.get(oportunidad.id) ?? null;
+      // Datos del comprador y desglose de la cotización para la tabla de Cartera en Gestión.
+      identificacion = fiducia?.identificacion || cotizacion?.contactoSnapshot?.cedula || null;
+      telefono = oportunidad.telefono || cotizacion?.contactoSnapshot?.telefono || null;
+      email = oportunidad.email || cotizacion?.contactoSnapshot?.email || null;
+      // HubSpot no tiene "país de residencia": lo más cercano es el país de ciudadanía.
+      paisResidencia = oportunidad.propiedades?.pais_de_ciudadania || null;
+      valorApartamento = cotizacion?.informacionFinanciera?.valorApartamento ?? null;
+      valorParqueadero = cotizacion?.informacionFinanciera?.valorParqueadero ?? null;
       const conciliacion = conciliacionAproximada(cotizacion, fiducia);
 
       if (conciliacion) {
@@ -201,6 +215,12 @@ async function construirFilasCompletas() {
       valorM2Hubspot: inmueble?.valor_m2 != null && !Number.isNaN(Number(inmueble.valor_m2)) ? Number(inmueble.valor_m2) : null,
       area: inmueble?.area_construida != null && !Number.isNaN(Number(inmueble.area_construida)) ? Number(inmueble.area_construida) : null, // área CONSTRUIDA (antes tomaba la privada)
       fechaContrato: diaBogota(oportunidad?.propiedades?.[`hs_v2_date_entered_${ETAPA_8_STAGE_ID}`]),
+      identificacion,
+      telefono,
+      email,
+      paisResidencia,
+      valorApartamento,
+      valorParqueadero,
       _tieneMovimientos: tieneMovimientos,
       porMes,
       porMesInicial,
@@ -422,10 +442,12 @@ const CAMPOS_ORDENABLES_MORA = new Set([
   'fechaSaldoContraentrega',
   // Informe de Cartera
   'vista', 'area', 'fechaContrato', 'valorM2', 'valorCuotaInicial', 'credito', 'totalAbonado', 'pctRecaudo',
+  'identificacion', 'telefono', 'email', 'paisResidencia', 'valorApartamento', 'valorParqueadero', 'porRecibir',
 ]);
 const CAMPOS_NUMERICOS_MORA = new Set([
   'valorInmueble', 'cuotasEnMora', 'maxDiasAtraso', 'montoEnMora', 'pctEnMora',
   'area', 'valorM2', 'valorCuotaInicial', 'credito', 'totalAbonado', 'pctRecaudo',
+  'valorApartamento', 'valorParqueadero', 'porRecibir',
 ]);
 
 function ordenarCarteraMora(filas, sortBy, sortDir) {
@@ -506,6 +528,7 @@ async function obtenerCarteraMora({ search, torre, estadoInmueble, rango, vista,
     valorM2: f.valorM2Hubspot,
     credito: f.valorInmueble != null && f.valorCuotaInicial != null ? f.valorInmueble - f.valorCuotaInicial : null,
     pctRecaudo: f.valorInmueble > 0 && f.totalAbonado != null ? (f.totalAbonado / f.valorInmueble) * 100 : null,
+    porRecibir: f.valorInmueble != null ? Math.max(0, f.valorInmueble - (f.totalAbonado ?? 0)) : null,
   }));
   filas = ordenarCarteraMora(filas, sortBy, sortDir);
 

@@ -42,7 +42,7 @@ Mismas que `backend/.env.example`. Las imprescindibles en producción:
 | `ZOHO_CLIENT_ID` `ZOHO_CLIENT_SECRET` `ZOHO_REFRESH_TOKEN` `ZOHO_API_BASE` `ZOHO_ACCOUNTS_URL` | Sync de Baía Kristal. |
 | `HUBSPOT_ACCESS_TOKEN` `HUBSPOT_API_BASE` | Sync de Oliv. |
 | `EXCEL_PASSWORD` | Clave de los Excel de la fiduciaria. |
-| `CENTRO_APLICACIONES_DATABASE_URL` | Solo lectura (plan de pago de la cotización aceptada de Oliv). |
+| `CENTRO_APLICACIONES_URL` / `CENTRO_APLICACIONES_API_KEY` | Solo lectura: endpoint de integración de Centro Aplicaciones Comerciales (cotización aceptada de Oliv, con plan de pago e información financiera). La llave es igual a `INTEGRACION_API_KEY` de esa app. |
 | `PRECALENTAR_CACHE` | `false` desactiva el precalentado del cálculo de cartera al arrancar. |
 
 `PORT` ya queda en `3000` dentro de la imagen; `NODE_ENV=production` también.

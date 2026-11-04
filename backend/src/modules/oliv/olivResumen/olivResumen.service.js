@@ -68,18 +68,14 @@ async function construirFilasCompletas() {
   }
   const inmuebleHubspotIds = new Set(inmuebles.map((im) => im.hubspot_id));
 
-  // Cotizaciones aceptadas: una llamada por Oportunidad con referencia (a
-  // Centro Aplicaciones Comerciales) -- volumen chico de Oliv (~20-50
-  // negocios calificados), no vale la pena optimizar a una sola query
-  // batched (ese endpoint no la ofrece hoy).
+  // Cotizaciones aceptadas: una sola llamada al endpoint de integración de
+  // Centro Aplicaciones Comerciales con todos los negocios.
   const cotizacionPorOportunidadId = new Map();
-  await Promise.all(
-    oportunidades.map(async (op) => {
-      const raw = await centroAplicacionesDb.getCotizacionAceptada(op.hubspot_id).catch(() => null);
-      const mapeada = centroAplicacionesDb.mapCotizacion(raw);
-      if (mapeada) cotizacionPorOportunidadId.set(op.id, mapeada);
-    })
-  );
+  const cotizacionesPorDeal = await centroAplicacionesDb.getCotizacionesAceptadas(oportunidades.map((op) => op.hubspot_id)).catch(() => ({}));
+  for (const op of oportunidades) {
+    const mapeada = centroAplicacionesDb.mapCotizacion(cotizacionesPorDeal[String(op.hubspot_id)]);
+    if (mapeada) cotizacionPorOportunidadId.set(op.id, mapeada);
+  }
 
   function filaDeOportunidad({ inmueble, oportunidad }) {
     const porMes = {};

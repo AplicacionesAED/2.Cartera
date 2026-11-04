@@ -60,6 +60,15 @@ function InfoRow({ label, children }) {
   );
 }
 
+function FinRenglon({ label, valor, resta = false, total = false }) {
+  return (
+    <div className={`${styles.finRenglon} ${resta ? styles.finResta : ''} ${total ? styles.finTotal : ''}`}>
+      <span>{label}</span>
+      <span>{valor}</span>
+    </div>
+  );
+}
+
 function esUrl(value) {
   return typeof value === 'string' && /^https?:\/\//i.test(value);
 }
@@ -228,16 +237,18 @@ export function OlivOportunidadDetallePage() {
             return (
               <div className={styles.card}>
                 <p className={styles.subtitulo}>Información financiera</p>
-                <InfoRow label="Valor apartamento">{formatCOP(fin.valorApartamento)}</InfoRow>
-                {fin.descuento && (
-                  <InfoRow label={`Descuento ${fin.descuento.tipo ?? ''}${fin.descuento.modo === 'montoFijo' ? ' (Fijo)' : fin.descuento.porcentaje != null ? ` (${fin.descuento.porcentaje}%)` : ''}`.trim()}>{`− ${formatCOP(fin.descuento.monto)}`}</InfoRow>
-                )}
-                {fin.valorParqueadero != null && <InfoRow label="Valor parqueadero">{formatCOP(fin.valorParqueadero)}</InfoRow>}
-                {fin.valorDeposito != null && <InfoRow label="Valor depósito">{formatCOP(fin.valorDeposito)}</InfoRow>}
-                {fin.valorCuartoUtil != null && <InfoRow label="Valor cuarto útil">{formatCOP(fin.valorCuartoUtil)}</InfoRow>}
-                {fin.bonoAplicado != null && <InfoRow label="Bono aplicado">{`− ${formatCOP(fin.bonoAplicado)}`}</InfoRow>}
-                {fin.adicionales.map((a, i) => <InfoRow key={i} label={a.nombre}>{`+ ${formatCOP(a.monto)}`}</InfoRow>)}
-                <InfoRow label="Valor total">{formatCOP(fin.valorTotal)}</InfoRow>
+                <div>
+                  <FinRenglon label="Valor apartamento" valor={formatCOP(fin.valorApartamento)} />
+                  {fin.descuento && (
+                    <FinRenglon resta label={`Descuento ${fin.descuento.tipo ?? ''}${fin.descuento.modo === 'montoFijo' ? ' (Fijo)' : fin.descuento.porcentaje != null ? ` (${fin.descuento.porcentaje}%)` : ''}`.trim()} valor={`− ${formatCOP(fin.descuento.monto)}`} />
+                  )}
+                  {fin.valorParqueadero != null && <FinRenglon label="Valor parqueadero" valor={formatCOP(fin.valorParqueadero)} />}
+                  {fin.valorDeposito != null && <FinRenglon label="Valor depósito" valor={formatCOP(fin.valorDeposito)} />}
+                  {fin.valorCuartoUtil != null && <FinRenglon label="Valor cuarto útil" valor={formatCOP(fin.valorCuartoUtil)} />}
+                  {fin.bonoAplicado != null && <FinRenglon resta label="Bono aplicado" valor={`− ${formatCOP(fin.bonoAplicado)}`} />}
+                  {fin.adicionales.map((a, i) => <FinRenglon key={i} label={a.nombre} valor={`+ ${formatCOP(a.monto)}`} />)}
+                  <FinRenglon total label="Valor total" valor={formatCOP(fin.valorTotal)} />
+                </div>
               </div>
             );
           })()}

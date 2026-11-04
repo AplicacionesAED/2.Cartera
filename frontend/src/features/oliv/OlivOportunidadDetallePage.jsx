@@ -223,6 +223,25 @@ export function OlivOportunidadDetallePage() {
             <FieldGrid campos={COTIZACIONES} propiedades={propiedades} metadata={metadata} />
           </div>
 
+          {op.cotizacionAceptada?.informacionFinanciera && (() => {
+            const fin = op.cotizacionAceptada.informacionFinanciera;
+            return (
+              <div className={styles.card}>
+                <p className={styles.subtitulo}>Información financiera</p>
+                <InfoRow label="Valor apartamento">{formatCOP(fin.valorApartamento)}</InfoRow>
+                {fin.descuento && (
+                  <InfoRow label={`Descuento ${fin.descuento.tipo ?? ''}${fin.descuento.modo === 'montoFijo' ? ' (Fijo)' : fin.descuento.porcentaje != null ? ` (${fin.descuento.porcentaje}%)` : ''}`.trim()}>{`− ${formatCOP(fin.descuento.monto)}`}</InfoRow>
+                )}
+                {fin.valorParqueadero != null && <InfoRow label="Valor parqueadero">{formatCOP(fin.valorParqueadero)}</InfoRow>}
+                {fin.valorDeposito != null && <InfoRow label="Valor depósito">{formatCOP(fin.valorDeposito)}</InfoRow>}
+                {fin.valorCuartoUtil != null && <InfoRow label="Valor cuarto útil">{formatCOP(fin.valorCuartoUtil)}</InfoRow>}
+                {fin.bonoAplicado != null && <InfoRow label="Bono aplicado">{`− ${formatCOP(fin.bonoAplicado)}`}</InfoRow>}
+                {fin.adicionales.map((a, i) => <InfoRow key={i} label={a.nombre}>{`+ ${formatCOP(a.monto)}`}</InfoRow>)}
+                <InfoRow label="Valor total">{formatCOP(fin.valorTotal)}</InfoRow>
+              </div>
+            );
+          })()}
+
           {op.cotizacionAceptada?.planDePago ? (
             <Accordion collapsible={false} title="Plan de Pagos">
               <div className={styles.seccionBody}>

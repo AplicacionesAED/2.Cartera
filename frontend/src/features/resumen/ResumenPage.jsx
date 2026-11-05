@@ -21,7 +21,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { exportarConsolidadoPdf } from './consolidadoPdf.js';
 import { exportarConsolidadoExcel } from './consolidadoExcel.js';
-import { Maximize2, Minimize2, Layers, MapPin, Building, X, CheckCircle2, XCircle, Clock, Building2, Wallet, AlertTriangle, Hourglass, Target, KeyRound, Download } from 'lucide-react';
+import { Maximize2, Minimize2, Layers, MapPin, Building, X, CheckCircle2, XCircle, Clock, Download } from 'lucide-react';
 import { Field } from '../../components/ui/Field.jsx';
 import { CampoMes } from '../../components/ui/CampoMes.jsx';
 import { etiquetaMesLarga } from '../../components/ui/SelectorMes.jsx';
@@ -40,7 +40,7 @@ import { getSyncLogsOportunidades } from '../../api/oportunidades.js';
 import { etiquetaEtapa, compararEtapas } from '../../utils/etapas.js';
 import { formatDateTime } from '../../utils/format.js';
 import { EsperadoRecaudadoChart, fmtDia, fmtMes } from '../dashboard/charts/EsperadoRecaudadoChart.jsx';
-import { KpiBloque } from './KpiBloque.jsx';
+import { KpiMatriz } from './KpiMatriz.jsx';
 import dashStyles from '../dashboard/Dashboard.module.css';
 import styles from './ResumenPage.module.css';
 
@@ -246,6 +246,9 @@ function ConsolidadoCarteraEtapa({ data }) {
 }
 
 // ── Página principal ────────────────────────────────────────────────────
+
+// Porcentaje recaudado (0-100) sobre la totalidad; null si no hay totalidad.
+const pctRecaudo = (recaudado, totalidad) => (totalidad > 0 ? (recaudado / totalidad) * 100 : null);
 
 export function ResumenPage() {
   const { usuario } = useAuth();
@@ -542,41 +545,44 @@ export function ResumenPage() {
       </div>
 
       {/* KPIs gerenciales */}
-      <div className={styles.kpiSecciones}>
-        <KpiBloque storageKey="resumen:kpi100" titulo="Total (100%) — a la fecha" resumen={kpisActuales ? `Totalidad ${fmtMoney(kpisActuales.totalidad100)} · Recaudado ${fmtMoney(kpisActuales.recaudado100)} · Por recaudar ${fmtMoney(kpisActuales.porRecaudar100)}` : null}>
-          <div className={dashStyles.statsGrid}>
-            <StatTileConHint label="Totalidad del 100%" icon={Target} tone="primary" value={kpisActuales ? fmtMoney(kpisActuales.totalidad100) : '—'} description="Suma del Valor venta de la fiducia de los negocios vendidos. Es el mismo valor de Valor ventas fiduciaria del Consolidado. Respeta los filtros de etapa, frente y torre, pero no el de periodo." />
-            <StatTileConHint label="Recaudado del 100%" icon={CheckCircle2} tone="success" value={kpisActuales ? fmtMoney(kpisActuales.recaudado100) : '—'} description="Suma del Total pagado de los negocios vendidos, a hoy. Es el mismo valor de Recaudado a la fecha del Consolidado." />
-            <StatTileConHint label="Por recaudar (100%)" icon={Hourglass} tone="neutral" value={kpisActuales ? fmtMoney(kpisActuales.porRecaudar100) : '—'} description="Valor ventas fiduciaria menos recaudado, etapa por etapa y nunca negativo. Es el mismo valor de Pendiente por recaudar del Consolidado." />
-            <StatTileConHint label="Cuotas vencidas (100%) (actual)" icon={AlertTriangle} tone="warning" value={kpisActuales ? String(kpisActuales.cuotasEnMora) : '—'} sub={kpisActuales ? fmtMoney(kpisActuales.montoEnMora) : undefined} description="Cuotas del plan de pagos de Zoho (cuota inicial y saldo contraentrega) de todos los negocios con fecha anterior a hoy que no están pagadas completas. El valor es lo que falta por pagar de ellas." />
-          </div>
-        </KpiBloque>
-
-        <KpiBloque storageKey="resumen:kpi30" titulo="Cuota inicial (30%) — a la fecha" resumen={kpisActuales ? `Totalidad ${fmtMoney(kpisActuales.totalidad30)} · Recaudado ${fmtMoney(kpisActuales.recaudado30)} · Por recaudar ${fmtMoney(kpisActuales.porRecaudar30)}` : null}>
-          <div className={dashStyles.statsGrid}>
-            <StatTileConHint label="Totalidad del 30%" icon={Target} tone="primary" value={kpisActuales ? fmtMoney(kpisActuales.totalidad30) : '—'} description="Suma de la cuota inicial de la fiducia de los negocios vendidos. Es el mismo valor de Valor cuotas iniciales del Consolidado." />
-            <StatTileConHint label="Recaudado del 30%" icon={CheckCircle2} tone="success" value={kpisActuales ? fmtMoney(kpisActuales.recaudado30) : '—'} description="Por cada negocio vendido, lo pagado hasta el valor de su cuota inicial. Es el mismo valor de Recaudado cuota inicial del Consolidado." />
-            <StatTileConHint label="Por recaudar (30%)" icon={Hourglass} tone="neutral" value={kpisActuales ? fmtMoney(kpisActuales.porRecaudar30) : '—'} description="Valor cuotas iniciales menos recaudado cuota inicial. Es el mismo valor de Cuotas iniciales por recaudar del Consolidado." />
-            <StatTileConHint label="Cuotas vencidas (30%) (actual)" icon={AlertTriangle} tone="warning" value={kpisActuales ? String(kpisActuales.cuotasEnMoraInicial) : '—'} sub={kpisActuales ? fmtMoney(kpisActuales.montoEnMoraInicial) : undefined} description="Cuotas de cuota inicial del plan de pagos de Zoho de todos los negocios con fecha anterior a hoy que no están pagadas completas. El valor es lo que falta por pagar de ellas." />
-          </div>
-        </KpiBloque>
-
-        <KpiBloque storageKey="resumen:kpi70" titulo="Crédito (70%) — a la fecha" resumen={kpisActuales ? `Totalidad ${fmtMoney(kpisActuales.totalidad70)} · Recaudado ${fmtMoney(kpisActuales.recaudado70)} · Por recaudar ${fmtMoney(kpisActuales.porRecaudar70)}` : null}>
-          <div className={dashStyles.statsGrid}>
-            <StatTileConHint label="Totalidad del 70%" icon={Target} tone="primary" value={kpisActuales ? fmtMoney(kpisActuales.totalidad70) : '—'} description="Valor ventas fiduciaria menos valor cuotas iniciales: la parte de crédito de los negocios vendidos." />
-            <StatTileConHint label="Recaudado del 70%" icon={Wallet} tone="success" value={kpisActuales ? fmtMoney(kpisActuales.recaudado70) : '—'} description="Parte de lo recaudado que supera la cuota inicial de cada negocio. Es el mismo valor de Recaudado crédito del Consolidado." />
-            <StatTileConHint label="Por recaudar (70%)" icon={Hourglass} tone="neutral" value={kpisActuales ? fmtMoney(kpisActuales.porRecaudar70) : '—'} description="Pendiente por recaudar menos cuotas iniciales por recaudar. Es el mismo valor de Crédito por recaudar del Consolidado." />
-          </div>
-        </KpiBloque>
-
-        <div>
-          <h3 className={styles.kpiSeccionTitulo}>Inventario y ventas (actual)<InfoTooltip text="Foto de hoy, sin filtro de periodo. Un inmueble es disponible si su estado fiducia (módulo Inmuebles) es LIBRE, y vendido en cualquier otro caso." /></h3>
-          <div className={dashStyles.statsGrid}>
-            <StatTileConHint label="Inmuebles disponibles (actual)" icon={Building2} tone="primary" value={kpisActuales ? fmtMoney(kpisActuales.valorDisponible) : '—'} sub={kpisActuales ? `${kpisActuales.cantidadDisponible} unidades` : undefined} description="Cantidad de inmuebles con estado fiducia LIBRE y suma de su precio unitario (Unit_Price de Zoho), a hoy. Es la misma regla de Unidades disponibles y Valor unidades disponibles del Consolidado." />
-            <StatTileConHint label="Inmuebles vendidos (actual)" icon={KeyRound} tone="success" value={kpisActuales ? fmtMoney(kpisActuales.valorVendidos) : '—'} sub={kpisActuales ? `${kpisActuales.cantidadVendidos} unidades` : undefined} description="Cantidad de inmuebles con estado fiducia distinto de LIBRE y suma de su Valor venta de la fiducia, a hoy. Es la misma regla de Unidades vendidas y Valor ventas fiduciaria del Consolidado." />
-          </div>
-        </div>
-      </div>
+      <KpiMatriz
+        titulo="KPIs — a la fecha"
+        filas={[
+        {
+          clave: '100',
+          label: 'Total (100%)',
+          totalidad: { valor: kpisActuales ? fmtMoney(kpisActuales.totalidad100) : '—', descripcion: "Suma del Valor venta de la fiducia de los negocios vendidos. Es el mismo valor de Valor ventas fiduciaria del Consolidado. Respeta los filtros de etapa, frente y torre, pero no el de periodo." },
+          recaudado: { valor: kpisActuales ? fmtMoney(kpisActuales.recaudado100) : '—', descripcion: "Suma del Total pagado de los negocios vendidos, a hoy. Es el mismo valor de Recaudado a la fecha del Consolidado." },
+          porRecaudar: { valor: kpisActuales ? fmtMoney(kpisActuales.porRecaudar100) : '—', descripcion: "Valor ventas fiduciaria menos recaudado, etapa por etapa y nunca negativo. Es el mismo valor de Pendiente por recaudar del Consolidado." },
+          pct: kpisActuales ? pctRecaudo(kpisActuales.recaudado100, kpisActuales.totalidad100) : null,
+          vencidas: { cantidad: kpisActuales ? String(kpisActuales.cuotasEnMora) : '—', monto: kpisActuales ? fmtMoney(kpisActuales.montoEnMora) : null, descripcion: "Cuotas del plan de pagos de Zoho (cuota inicial y saldo contraentrega) de todos los negocios con fecha anterior a hoy que no están pagadas completas. El valor es lo que falta por pagar de ellas." },
+        },
+        {
+          clave: '30',
+          label: 'Cuota inicial (30%)',
+          totalidad: { valor: kpisActuales ? fmtMoney(kpisActuales.totalidad30) : '—', descripcion: "Suma de la cuota inicial de la fiducia de los negocios vendidos. Es el mismo valor de Valor cuotas iniciales del Consolidado." },
+          recaudado: { valor: kpisActuales ? fmtMoney(kpisActuales.recaudado30) : '—', descripcion: "Por cada negocio vendido, lo pagado hasta el valor de su cuota inicial. Es el mismo valor de Recaudado cuota inicial del Consolidado." },
+          porRecaudar: { valor: kpisActuales ? fmtMoney(kpisActuales.porRecaudar30) : '—', descripcion: "Valor cuotas iniciales menos recaudado cuota inicial. Es el mismo valor de Cuotas iniciales por recaudar del Consolidado." },
+          pct: kpisActuales ? pctRecaudo(kpisActuales.recaudado30, kpisActuales.totalidad30) : null,
+          vencidas: { cantidad: kpisActuales ? String(kpisActuales.cuotasEnMoraInicial) : '—', monto: kpisActuales ? fmtMoney(kpisActuales.montoEnMoraInicial) : null, descripcion: "Cuotas de cuota inicial del plan de pagos de Zoho de todos los negocios con fecha anterior a hoy que no están pagadas completas. El valor es lo que falta por pagar de ellas." },
+        },
+        {
+          clave: '70',
+          label: 'Crédito (70%)',
+          totalidad: { valor: kpisActuales ? fmtMoney(kpisActuales.totalidad70) : '—', descripcion: "Valor ventas fiduciaria menos valor cuotas iniciales: la parte de crédito de los negocios vendidos." },
+          recaudado: { valor: kpisActuales ? fmtMoney(kpisActuales.recaudado70) : '—', descripcion: "Parte de lo recaudado que supera la cuota inicial de cada negocio. Es el mismo valor de Recaudado crédito del Consolidado." },
+          porRecaudar: { valor: kpisActuales ? fmtMoney(kpisActuales.porRecaudar70) : '—', descripcion: "Pendiente por recaudar menos cuotas iniciales por recaudar. Es el mismo valor de Crédito por recaudar del Consolidado." },
+          pct: kpisActuales ? pctRecaudo(kpisActuales.recaudado70, kpisActuales.totalidad70) : null,
+          vencidas: null,
+        },
+        ]}
+        inventarioTitulo="Inventario y ventas (actual)"
+        inventarioNota="Foto de hoy, sin filtro de periodo. Un inmueble es disponible si su estado fiducia (módulo Inmuebles) es LIBRE, y vendido en cualquier otro caso."
+        inventario={[
+          { label: 'Disponibles', valor: kpisActuales ? fmtMoney(kpisActuales.valorDisponible) : '—', sub: kpisActuales ? `${kpisActuales.cantidadDisponible} unidades` : undefined, descripcion: "Cantidad de inmuebles con estado fiducia LIBRE y suma de su precio unitario (Unit_Price de Zoho), a hoy. Es la misma regla de Unidades disponibles y Valor unidades disponibles del Consolidado." },
+          { label: 'Vendidos', valor: kpisActuales ? fmtMoney(kpisActuales.valorVendidos) : '—', sub: kpisActuales ? `${kpisActuales.cantidadVendidos} unidades` : undefined, descripcion: "Cantidad de inmuebles con estado fiducia distinto de LIBRE y suma de su Valor venta de la fiducia, a hoy. Es la misma regla de Unidades vendidas y Valor ventas fiduciaria del Consolidado." },
+        ]}
+      />
 
       {/* Tendencia: plan de pagos vs. recaudo real */}
       <div className={enfocado ? styles.tendenciaEnfocada : styles.tendenciaCard}>
@@ -684,20 +690,3 @@ export function ResumenPage() {
   );
 }
 
-function StatTileConHint({ label, value, sub, description, icon: Icon, tone = 'primary' }) {
-  return (
-    <div className={`${dashStyles.statTile} ${styles.tileBloque}`}>
-      <div className={dashStyles.statTop}>
-        {Icon && (
-          <span className={`${dashStyles.iconChip} ${dashStyles[`tone_${tone}`]}`}>
-            <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
-          </span>
-        )}
-        {description && <InfoTooltip text={description} />}
-      </div>
-      <span className={dashStyles.statValue}>{value}</span>
-      <span className={styles.statSub}>{sub ?? ' '}</span>
-      <span className={dashStyles.statLabel}>{label}</span>
-    </div>
-  );
-}

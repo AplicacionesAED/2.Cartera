@@ -1,0 +1,136 @@
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.titulo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-title-size);
+  font-weight: var(--text-title-weight);
+  color: var(--color-ink);
+}
+
+.scroll {
+  overflow-x: auto;
+}
+
+.tabla {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.tabla th,
+.tabla td {
+  padding: 10px 12px;
+  text-align: right;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tabla thead th {
+  font-size: var(--text-label-size);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.tabla tbody tr:last-child th,
+.tabla tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.colLabel {
+  text-align: left !important;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.valor {
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-body-size);
+}
+
+.fuerte {
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.exito {
+  font-weight: 600;
+  color: var(--color-success-ink);
+}
+
+.alerta {
+  font-weight: 600;
+  color: var(--color-warning-ink);
+}
+
+.sub {
+  font-size: var(--text-data-size);
+  font-weight: 400;
+  color: var(--color-ink-muted);
+}
+
+.pct {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.pista {
+  display: block;
+  width: 64px;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.relleno {
+  display: block;
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 2px;
+}
+
+.inventario {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-lg);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border);
+}
+
+.inventarioTitulo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--text-label-size);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.inventarioItem {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.inventarioEtiqueta {
+  color: var(--color-ink-muted);
+}

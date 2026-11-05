@@ -12,13 +12,13 @@
 //     adaptadas a lo que Oliv realmente tiene (sin distinción Vendidas-Fidu
 //     vs Vendidas-CRM, que no existe acá).
 // El resto (EsperadoRecaudadoChart, useModoEnfocado, exportar Excel con
-// ExcelJS, StatTileConHint) se REUSA tal cual de Baía Kristal -- mismos
+// ExcelJS, KpiMatriz) se REUSA tal cual de Baía Kristal -- mismos
 // componentes/estilos compartidos, cross-import ya es un patrón establecido
 // en los módulos de Oliv (ej. OlivEncargosListPage.jsx reusa
 // fiducia/EncargosListPage.module.css).
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import ExcelJS from 'exceljs';
-import { Maximize2, Minimize2, MapPin, Building2, X, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, Wallet, AlertTriangle, Hourglass, Target, KeyRound, Download } from 'lucide-react';
+import { Maximize2, Minimize2, MapPin, Building2, X, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, Download } from 'lucide-react';
 import { Field } from '../../components/ui/Field.jsx';
 import { CampoMes } from '../../components/ui/CampoMes.jsx';
 import { etiquetaMesLarga } from '../../components/ui/SelectorMes.jsx';
@@ -39,7 +39,7 @@ import { getSyncStatusOportunidadesOliv } from '../../api/oliv.js';
 import { formatDateTime } from '../../utils/format.js';
 import { EsperadoRecaudadoChart, fmtDia, fmtMes } from '../dashboard/charts/EsperadoRecaudadoChart.jsx';
 import { TorreRecaudoChart } from '../dashboard/charts/TorreRecaudoChart.jsx';
-import { KpiBloque } from '../resumen/KpiBloque.jsx';
+import { KpiMatriz } from '../resumen/KpiMatriz.jsx';
 import { exportarConsolidadoPdf } from '../resumen/consolidadoPdf.js';
 import dashStyles from '../dashboard/Dashboard.module.css';
 import styles from '../resumen/ResumenPage.module.css';
@@ -235,6 +235,9 @@ function ConsolidadoCarteraTorre({ data }) {
 }
 
 // ── Página principal ────────────────────────────────────────────────────
+
+// Porcentaje recaudado (0-100) sobre la totalidad; null si no hay totalidad.
+const pctRecaudo = (recaudado, totalidad) => (totalidad > 0 ? (recaudado / totalidad) * 100 : null);
 
 export function OlivResumenPage() {
   const { usuario } = useAuth();
@@ -592,41 +595,43 @@ export function OlivResumenPage() {
       </div>
 
       {/* KPIs gerenciales */}
-      <div className={styles.kpiSecciones}>
-        <KpiBloque storageKey="oliv-resumen:kpi100" titulo={`Total (100%) — ${labelVentana}`} resumen={kpisRecaudo ? `Totalidad ${fmtMoney(kpisRecaudo.totalidad100)} · Recaudado ${fmtMoney(kpisRecaudo.recaudado100)} · Por recaudar ${fmtMoney(kpisRecaudo.porRecaudar100)}` : null}>
-          <div className={dashStyles.statsGrid}>
-            <StatTileConHint label="Totalidad del 100%" icon={Target} tone="primary" value={kpisRecaudo ? fmtMoney(kpisRecaudo.totalidad100) : '—'} description={`Total esperado de todo el plan de pagos (Cuota Inicial más Saldo), dentro del periodo seleccionado (${labelVentana}).`} />
-            <StatTileConHint label="Recaudado del 100%" icon={CheckCircle2} tone="success" value={kpisRecaudo ? fmtMoney(kpisRecaudo.recaudado100) : '—'} description={`Todo lo realmente recaudado, sin importar a qué cuota se aplicó, dentro del periodo seleccionado (${labelVentana}).`} />
-            <StatTileConHint label="Por recaudar (100%)" icon={Hourglass} tone="neutral" value={kpisRecaudo ? fmtMoney(kpisRecaudo.porRecaudar100) : '—'} description={`Plan de pagos esperado menos lo recaudado real, dentro del periodo seleccionado (${labelVentana}).`} />
-            <StatTileConHint label="Cuotas vencidas (100%) (actual)" icon={AlertTriangle} tone="warning" value={kpisActuales ? String(kpisActuales.cuotasEnMora) : '—'} sub={kpisActuales ? fmtMoney(kpisActuales.montoEnMora) : undefined} description="Cuotas atrasadas de todo el plan de pagos (Cuota Inicial y Saldo), a hoy -- no cambia con el filtro de periodo." />
-          </div>
-        </KpiBloque>
-
-        <KpiBloque storageKey="oliv-resumen:kpi30" titulo={`Cuota inicial (30%) — ${labelVentana}`} resumen={kpisRecaudo ? `Totalidad ${fmtMoney(kpisRecaudo.totalidad30)} · Recaudado ${fmtMoney(kpisRecaudo.recaudado30)} · Por recaudar ${fmtMoney(kpisRecaudo.porRecaudar30)}` : null}>
-          <div className={dashStyles.statsGrid}>
-            <StatTileConHint label="Totalidad del 30%" icon={Target} tone="primary" value={kpisRecaudo ? fmtMoney(kpisRecaudo.totalidad30) : '—'} description={`Total esperado de la Cuota Inicial según el plan de pagos, dentro del periodo seleccionado (${labelVentana}).`} />
-            <StatTileConHint label="Recaudado del 30%" icon={CheckCircle2} tone="success" value={kpisRecaudo ? fmtMoney(kpisRecaudo.recaudado30) : '—'} description={`Lo realmente recaudado hacia la Cuota Inicial, dentro del periodo seleccionado (${labelVentana}).`} />
-            <StatTileConHint label="Por recaudar (30%)" icon={Hourglass} tone="neutral" value={kpisRecaudo ? fmtMoney(kpisRecaudo.porRecaudar30) : '—'} description={`Cuota Inicial esperada menos lo recaudado real, dentro del periodo seleccionado (${labelVentana}).`} />
-            <StatTileConHint label="Cuotas vencidas (30%) (actual)" icon={AlertTriangle} tone="warning" value={kpisActuales ? String(kpisActuales.cuotasEnMoraInicial) : '—'} sub={kpisActuales ? fmtMoney(kpisActuales.montoEnMoraInicial) : undefined} description="Cuotas atrasadas SOLO de la Cuota Inicial, a hoy -- no cambia con el filtro de periodo." />
-          </div>
-        </KpiBloque>
-
-        <KpiBloque storageKey="oliv-resumen:kpi70" titulo={`Saldo final (70%) — ${labelVentana}`} resumen={kpisRecaudo ? `Totalidad ${fmtMoney(kpisRecaudo.totalidad70)} · Recaudado ${fmtMoney(kpisRecaudo.recaudado70)} · Pendiente ${fmtMoney(kpisRecaudo.pendienteContraentrega)}` : null}>
-          <div className={dashStyles.statsGrid}>
-            <StatTileConHint label="Totalidad del 70%" icon={Target} tone="primary" value={kpisRecaudo ? fmtMoney(kpisRecaudo.totalidad70) : '—'} description={`Total esperado del Saldo final según conciliación, dentro del periodo seleccionado (${labelVentana}).`} />
-            <StatTileConHint label="Saldo recaudado" icon={Wallet} tone="success" value={kpisRecaudo ? fmtMoney(kpisRecaudo.recaudado70) : '—'} description={`Lo realmente recaudado hacia el Saldo final, dentro del periodo seleccionado (${labelVentana}).`} />
-            <StatTileConHint label="Saldo pendiente" icon={Hourglass} tone="neutral" value={kpisRecaudo ? fmtMoney(kpisRecaudo.pendienteContraentrega) : '—'} description={`Saldo final según conciliación, menos lo recaudado real, dentro del periodo seleccionado (${labelVentana}).`} />
-          </div>
-        </KpiBloque>
-
-        <div>
-          <h3 className={styles.kpiSeccionTitulo}>Inventario y ventas (actual)</h3>
-          <div className={dashStyles.statsGrid}>
-            <StatTileConHint label="Inmuebles disponibles (actual)" icon={Building2} tone="primary" value={kpisActuales ? fmtMoney(kpisActuales.valorDisponible) : '—'} sub={kpisActuales ? `${kpisActuales.cantidadDisponible} unidades` : undefined} description="Valor y cantidad de los inmuebles sin negocio vinculado, a hoy." />
-            <StatTileConHint label="Inmuebles vendidos (actual)" icon={KeyRound} tone="success" value={kpisActuales ? fmtMoney(kpisActuales.valorVendidos) : '—'} sub={kpisActuales ? `${kpisActuales.cantidadVendidos} unidades` : undefined} description="Valor y cantidad de los inmuebles con Estado = Vendido, a hoy." />
-          </div>
-        </div>
-      </div>
+      <KpiMatriz
+        titulo={`KPIs — ${labelVentana}`}
+        filas={[
+        {
+          clave: '100',
+          label: 'Total (100%)',
+          totalidad: { valor: kpisRecaudo ? fmtMoney(kpisRecaudo.totalidad100) : '—', descripcion: `Total esperado de todo el plan de pagos (Cuota Inicial más Saldo), dentro del periodo seleccionado (${labelVentana}).` },
+          recaudado: { valor: kpisRecaudo ? fmtMoney(kpisRecaudo.recaudado100) : '—', descripcion: `Todo lo realmente recaudado, sin importar a qué cuota se aplicó, dentro del periodo seleccionado (${labelVentana}).` },
+          porRecaudar: { valor: kpisRecaudo ? fmtMoney(kpisRecaudo.porRecaudar100) : '—', descripcion: `Plan de pagos esperado menos lo recaudado real, dentro del periodo seleccionado (${labelVentana}).` },
+          pct: kpisRecaudo ? pctRecaudo(kpisRecaudo.recaudado100, kpisRecaudo.totalidad100) : null,
+          vencidas: { cantidad: kpisActuales ? String(kpisActuales.cuotasEnMora) : '—', monto: kpisActuales ? fmtMoney(kpisActuales.montoEnMora) : null, descripcion: "Cuotas atrasadas de todo el plan de pagos (Cuota Inicial y Saldo), a hoy -- no cambia con el filtro de periodo." },
+        },
+        {
+          clave: '30',
+          label: 'Cuota inicial (30%)',
+          totalidad: { valor: kpisRecaudo ? fmtMoney(kpisRecaudo.totalidad30) : '—', descripcion: `Total esperado de la Cuota Inicial según el plan de pagos, dentro del periodo seleccionado (${labelVentana}).` },
+          recaudado: { valor: kpisRecaudo ? fmtMoney(kpisRecaudo.recaudado30) : '—', descripcion: `Lo realmente recaudado hacia la Cuota Inicial, dentro del periodo seleccionado (${labelVentana}).` },
+          porRecaudar: { valor: kpisRecaudo ? fmtMoney(kpisRecaudo.porRecaudar30) : '—', descripcion: `Cuota Inicial esperada menos lo recaudado real, dentro del periodo seleccionado (${labelVentana}).` },
+          pct: kpisRecaudo ? pctRecaudo(kpisRecaudo.recaudado30, kpisRecaudo.totalidad30) : null,
+          vencidas: { cantidad: kpisActuales ? String(kpisActuales.cuotasEnMoraInicial) : '—', monto: kpisActuales ? fmtMoney(kpisActuales.montoEnMoraInicial) : null, descripcion: "Cuotas atrasadas SOLO de la Cuota Inicial, a hoy -- no cambia con el filtro de periodo." },
+        },
+        {
+          clave: '70',
+          label: 'Saldo final (70%)',
+          totalidad: { valor: kpisRecaudo ? fmtMoney(kpisRecaudo.totalidad70) : '—', descripcion: `Total esperado del Saldo final según conciliación, dentro del periodo seleccionado (${labelVentana}).` },
+          recaudado: { valor: kpisRecaudo ? fmtMoney(kpisRecaudo.recaudado70) : '—', descripcion: `Lo realmente recaudado hacia el Saldo final, dentro del periodo seleccionado (${labelVentana}).` },
+          porRecaudar: { valor: kpisRecaudo ? fmtMoney(kpisRecaudo.pendienteContraentrega) : '—', descripcion: `Saldo final según conciliación, menos lo recaudado real, dentro del periodo seleccionado (${labelVentana}).` },
+          pct: kpisRecaudo ? pctRecaudo(kpisRecaudo.recaudado70, kpisRecaudo.totalidad70) : null,
+          vencidas: null,
+        },
+        ]}
+        inventarioTitulo="Inventario y ventas (actual)"
+        inventario={[
+          { label: 'Disponibles', valor: kpisActuales ? fmtMoney(kpisActuales.valorDisponible) : '—', sub: kpisActuales ? `${kpisActuales.cantidadDisponible} unidades` : undefined, descripcion: "Valor y cantidad de los inmuebles sin negocio vinculado, a hoy." },
+          { label: 'Vendidos', valor: kpisActuales ? fmtMoney(kpisActuales.valorVendidos) : '—', sub: kpisActuales ? `${kpisActuales.cantidadVendidos} unidades` : undefined, descripcion: "Valor y cantidad de los inmuebles con Estado = Vendido, a hoy." },
+        ]}
+      />
 
       {/* Tendencia: plan de pagos vs. recaudo real */}
       <div className={enfocado ? styles.tendenciaEnfocada : styles.tendenciaCard}>
@@ -743,20 +748,3 @@ export function OlivResumenPage() {
   );
 }
 
-function StatTileConHint({ label, value, sub, description, icon: Icon, tone = 'primary' }) {
-  return (
-    <div className={`${dashStyles.statTile} ${styles.tileBloque}`}>
-      <div className={dashStyles.statTop}>
-        {Icon && (
-          <span className={`${dashStyles.iconChip} ${dashStyles[`tone_${tone}`]}`}>
-            <Icon size={20} strokeWidth={1.75} aria-hidden="true" />
-          </span>
-        )}
-        {description && <InfoTooltip text={description} />}
-      </div>
-      <span className={dashStyles.statValue}>{value}</span>
-      <span className={styles.statSub}>{sub ?? ' '}</span>
-      <span className={dashStyles.statLabel}>{label}</span>
-    </div>
-  );
-}

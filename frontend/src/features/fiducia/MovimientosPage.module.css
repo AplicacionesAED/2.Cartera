@@ -143,3 +143,21 @@ a.referencia:hover {
 .sinDato {
   color: var(--color-border-strong);
 }
+
+/* Informe de desistidos: etiqueta, mes y botón en una sola línea. */
+.informeDesistidos {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.informeDesistidosEtiqueta {
+  font-size: var(--text-label-size);
+  font-weight: 600;
+  color: var(--color-ink-muted);
+  white-space: nowrap;
+}
+
+.informeDesistidos select {
+  width: 170px;
+}

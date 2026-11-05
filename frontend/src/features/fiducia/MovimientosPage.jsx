@@ -9,7 +9,7 @@
 // estilizada (ExcelJS -- xlsx/SheetJS no permite estilos en su build libre),
 // con el color de marca de Cartera en vez del teal de Baía Kristal.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Search, Download } from 'lucide-react';
+import { Search, Download, FileX2 } from 'lucide-react';
 import ExcelJS from 'exceljs';
 import { Button } from '../../components/ui/Button.jsx';
 import { Field, TextInput, Select } from '../../components/ui/Field.jsx';
@@ -22,6 +22,8 @@ import { etiquetaCampoMovimiento, valorCampoMovimiento } from '../../utils/movim
 import base from '../negocios/NegociosPage.module.css';
 import styles from './MovimientosPage.module.css';
 import { MovimientosTabla, formatCell, cleanNombre, shortFideicomiso } from './MovimientosTabla.jsx';
+import { SyncModoButton, FORMATOS_EXPORTAR_CONSOLIDADO } from '../../components/SyncModoButton.jsx';
+import { TIPO_DESISTIMIENTO, opcionesMeses, rangoDelMes, exportarInformeDesistidosExcel, exportarInformeDesistidosPdf } from './informeDesistidos.js';
 
 function useDebounce(value, delay = 350) {
   const [debounced, setDebounced] = useState(value);
@@ -38,6 +40,50 @@ const PRESETS = [
   { label: 'Últimos 6 meses', months: 6 },
   { label: 'Último año', months: 12 },
 ];
+
+// Informe mensual de desistidos: elige el mes y baja, en Excel o PDF, solo los movimientos DESISTIMIENTOS de ese mes.
+function InformeDesistidos() {
+  const meses = opcionesMeses();
+  const [mes, setMes] = useState(meses[1].value); // por defecto el mes anterior (el informe es mensual)
+  const [formato, setFormato] = useState('xlsx');
+  const [generando, setGenerando] = useState(false);
+
+  async function generar(fmt) {
+    setGenerando(true);
+    try {
+      const res = await exportMovimientosNegocios({ tipoMovimiento: [TIPO_DESISTIMIENTO], ...rangoDelMes(mes) });
+      const movimientos = res.data?.data || [];
+      if (movimientos.length === 0) {
+        window.alert('No hay movimientos desistidos en ese mes.');
+        return;
+      }
+      if (fmt === 'xlsx') await exportarInformeDesistidosExcel({ mes, movimientos });
+      else exportarInformeDesistidosPdf({ mes, movimientos });
+    } catch (err) {
+      window.alert(`Error al generar el informe de desistidos: ${err.message}`);
+    } finally {
+      setGenerando(false);
+    }
+  }
+
+  return (
+    <div className={styles.informeDesistidos}>
+      <label className={styles.informeDesistidosEtiqueta} htmlFor="informe-desistidos-mes">Desistidos de</label>
+      <Select id="informe-desistidos-mes" value={mes} onChange={(e) => setMes(e.target.value)} disabled={generando}>
+        {meses.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+      </Select>
+      <SyncModoButton
+        opciones={FORMATOS_EXPORTAR_CONSOLIDADO}
+        modo={formato}
+        onModo={setFormato}
+        onEjecutar={generar}
+        disabled={generando}
+        Icono={FileX2}
+        ariaLabelFlecha="Elegir formato del informe de desistidos"
+      />
+    </div>
+  );
+}
 
 export function MovimientosPage() {
   const [resultado, setResultado] = useState(null);
@@ -176,6 +222,7 @@ export function MovimientosPage() {
           </p>
         </div>
         <div className={base.acciones}>
+          <InformeDesistidos />
           <Button variant="secondary" onClick={handleExport} disabled={exportando || !pagination || pagination.total === 0}>
             <span className={base.botonInterior}>
               <Download size={14} aria-hidden="true" />

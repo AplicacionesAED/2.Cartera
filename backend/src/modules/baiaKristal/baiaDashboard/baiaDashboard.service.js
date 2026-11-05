@@ -565,6 +565,8 @@ async function obtenerDashboardRecaudo({ search, etapa, frente, torre, conMovimi
   const abonadoHaciaContraentrega = Math.max(0, totalesColumnasFijas.totalAbonado - totalesColumnasFijas.valorCuotaInicial);
   // Por recaudar: etapa por etapa y nunca negativo, igual que el Resumen.
   totalesColumnasFijas.pendienteRecaudar = totalesColumnasFijas.pendienteFiducia;
+  // Valor del portafolio = "Valor total de venta" del Consolidado: ventas de la fiducia más el valor de las unidades disponibles.
+  totalesColumnasFijas.valorPortafolio = totalesColumnasFijas.ventasFiducia + totalesColumnasFijas.valorDisponible;
   totalesColumnasFijas.pendienteContraentrega = Math.max(0, totalesColumnasFijas.valorSaldoContraentrega - abonadoHaciaContraentrega);
   totalesColumnasFijas.recaudadoContraentrega = Math.min(abonadoHaciaContraentrega, totalesColumnasFijas.valorSaldoContraentrega);
 

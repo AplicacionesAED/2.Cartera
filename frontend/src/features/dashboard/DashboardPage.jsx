@@ -542,8 +542,8 @@ export function DashboardPage() {
 
       {meta.totalesColumnasFijas && !cargando && !enfocado && (
         <div className={`${dashStyles.statsGrid}`}>
-          <StatTile label="Valor ventas fiduciaria" value={formatCOP(meta.totalesColumnasFijas.valorInmueble ?? 0)} icon={Building2} tone="primary" />
-          <StatTile label="Recaudado" value={formatCOP(meta.totalesColumnasFijas.totalAbonado ?? 0)} icon={Wallet} tone="success" />
+          <StatTile label="Valor del portafolio filtrado" value={formatCOP(meta.totalesColumnasFijas.valorPortafolio ?? 0)} icon={Building2} tone="primary" />
+          <StatTile label="Total abonado" value={formatCOP(meta.totalesColumnasFijas.totalAbonado ?? 0)} icon={Wallet} tone="success" />
           <StatTile label="Por recaudar" value={formatCOP(meta.totalesColumnasFijas.pendienteRecaudar ?? 0)} icon={Hourglass} tone="neutral" />
           <StatTile label="Valor proyectado" value={formatCOP((meta.totalesColumnasFijas.totalAbonado ?? 0) + (meta.totalesColumnasFijas.pendienteRecaudar ?? 0))} icon={TrendingUp} tone="primary" />
           <StatTile label={`En mora (${meta.totalesColumnasFijas.cuotasEnMora ?? 0} cuotas)`} value={formatCOP(meta.totalesColumnasFijas.montoEnMora ?? 0)} icon={AlertTriangle} tone="warning" warning={(meta.totalesColumnasFijas.montoEnMora ?? 0) > 0} />

@@ -18,11 +18,11 @@
 // fiducia/EncargosListPage.module.css).
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import ExcelJS from 'exceljs';
-import { Maximize2, Minimize2, MapPin, Building2, X, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, Wallet, AlertTriangle, Hourglass, Target, KeyRound } from 'lucide-react';
+import { Maximize2, Minimize2, MapPin, Building2, X, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, Wallet, AlertTriangle, Hourglass, Target, KeyRound, Download } from 'lucide-react';
 import { Field, Select } from '../../components/ui/Field.jsx';
 import { MultiSelect } from '../../components/ui/MultiSelect.jsx';
 import { Button } from '../../components/ui/Button.jsx';
-import { ExportMenu } from '../../components/ui/ExportMenu.jsx';
+import { SyncModoButton, FORMATOS_EXPORTAR_CONSOLIDADO } from '../../components/SyncModoButton.jsx';
 import { Badge } from '../../components/ui/Badge.jsx';
 import { InfoTooltip } from '../../components/ui/InfoTooltip.jsx';
 import { useAuth } from '../../auth/AuthContext.jsx';
@@ -243,6 +243,7 @@ export function OlivResumenPage() {
   const [error, setError] = useState(null);
   const [cerrando, setCerrando] = useState(false);
   const [exportandoConsolidado, setExportandoConsolidado] = useState(false);
+  const [formatoExport, setFormatoExport] = useState('xlsx');
   const [exportandoPdf, setExportandoPdf] = useState(false);
 
   // KPIs + tendencia (mismo backend que alimentaría un futuro "Dashboard
@@ -694,10 +695,14 @@ export function OlivResumenPage() {
             )}
           </Field>
           {datos?.enVivo && <Badge variant="info">En vivo</Badge>}
-          <ExportMenu
-            formatos={['xlsx', 'pdf']}
+          <SyncModoButton
+            opciones={FORMATOS_EXPORTAR_CONSOLIDADO}
+            modo={formatoExport}
+            onModo={setFormatoExport}
+            onEjecutar={(fmt) => (fmt === 'xlsx' ? handleExportConsolidado() : handleExportConsolidadoPdf())}
             disabled={!datos || exportandoConsolidado || exportandoPdf}
-            onExport={(fmt) => (fmt === 'xlsx' ? handleExportConsolidado() : handleExportConsolidadoPdf())}
+            Icono={Download}
+            ariaLabelFlecha="Elegir formato de exportación"
           />
         </div>
         <ConsolidadoCarteraTorre data={datos} />

@@ -31,43 +31,6 @@
   align-self: center;
 }
 
-/* ── KPIs ────────────────────────────────────────────────────────────── */
-
-.kpiSecciones {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-}
-
-/* Cada bloque de KPIs es una tarjeta de sección con su título. */
-.kpiSecciones > div {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-  padding: 24px 28px;
-  background: #fff;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-
-.kpiSeccionTitulo {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--text-title-size);
-  font-weight: 600;
-  color: var(--color-ink);
-}
-
-/* Tarjeta de cifra dentro de un bloque: sin segundo marco, solo fondo */
-.tileBloque:hover {
-  box-shadow: none !important;
-}
-
-.tileBloque {
-  background: var(--color-surface) !important;
-  border-color: transparent !important;
-}
-
 /* Barra única de filtros (ubicación + periodo) */
 .toolbarCard {
   composes: tarjeta from '../../components/ui/Filtros.module.css';
@@ -87,21 +50,6 @@
   padding-top: var(--space-md);
   border-top: 1px solid var(--color-border);
   align-items: center;
-}
-
-.statSub {
-  font-size: var(--text-data-size);
-  color: var(--color-ink-muted);
-  /* Siempre ocupa su línea (con espacio duro si no hay texto): todas las
-     tarjetas miden lo mismo, tengan o no subtítulo. */
-  min-height: 1.4em;
-}
-
-/* Alto uniforme: el rótulo de cada tarjeta reserva siempre 2 líneas, así una
-   tarjeta cuyo rótulo salta de línea (o no) mide igual que las demás. El ancho
-   sí se adapta: cada bloque reparte su fila completa entre sus tarjetas. */
-.tileBloque > span:last-child {
-  min-height: 2lh;
 }
 
 /* ── Tendencia ───────────────────────────────────────────────────────── */
@@ -456,44 +404,4 @@
 
 .syncResumen {
   margin-left: auto;
-}
-
-/* Encabezado clicable de un bloque de KPIs desglosable */
-.kpiBloqueHeader {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  width: 100%;
-  padding: 0;
-  border: 0;
-  background: none;
-  text-align: left;
-  cursor: pointer;
-  color: inherit;
-  font: inherit;
-}
-
-.kpiBloqueResumen {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: var(--text-data-size);
-  color: var(--color-ink-secondary);
-}
-
-.kpiBloqueHeader > .kpiSeccionTitulo {
-  flex-shrink: 0;
-}
-
-.kpiBloqueChevron {
-  margin-left: auto;
-  flex-shrink: 0;
-  color: var(--color-ink-muted);
-  transition: transform var(--duration-fast) var(--ease-standard);
-}
-
-.kpiBloqueChevronAbierto {
-  transform: rotate(180deg);
 }

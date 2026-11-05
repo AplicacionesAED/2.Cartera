@@ -9,7 +9,7 @@
 // estilizada (ExcelJS -- xlsx/SheetJS no permite estilos en su build libre),
 // con el color de marca de Cartera en vez del teal de Baía Kristal.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Search, Download, FileX2 } from 'lucide-react';
+import { Search, Download, FileX2, ChevronDown } from 'lucide-react';
 import ExcelJS from 'exceljs';
 import { Button } from '../../components/ui/Button.jsx';
 import { Field, TextInput, Select } from '../../components/ui/Field.jsx';
@@ -22,7 +22,7 @@ import { etiquetaCampoMovimiento, valorCampoMovimiento } from '../../utils/movim
 import base from '../negocios/NegociosPage.module.css';
 import styles from './MovimientosPage.module.css';
 import { MovimientosTabla, formatCell, cleanNombre, shortFideicomiso } from './MovimientosTabla.jsx';
-import { SyncModoButton, FORMATOS_EXPORTAR_CONSOLIDADO } from '../../components/SyncModoButton.jsx';
+import { Modal } from '../../components/ui/Modal.jsx';
 import { TIPO_DESISTIMIENTO, opcionesMeses, rangoDelMes, exportarInformeDesistidosExcel, exportarInformeDesistidosPdf } from './informeDesistidos.js';
 
 function useDebounce(value, delay = 350) {
@@ -41,14 +41,14 @@ const PRESETS = [
   { label: 'Último año', months: 12 },
 ];
 
-// Informe mensual de desistidos: elige el mes y baja, en Excel o PDF, solo los movimientos DESISTIMIENTOS de ese mes.
-function InformeDesistidos() {
+// Ventana del informe mensual de desistidos: elige el mes y el formato; baja solo los movimientos DESISTIMIENTOS de ese mes.
+function ModalInformeDesistidos({ open, onClose }) {
   const meses = opcionesMeses();
   const [mes, setMes] = useState(meses[1].value); // por defecto el mes anterior (el informe es mensual)
   const [formato, setFormato] = useState('xlsx');
   const [generando, setGenerando] = useState(false);
 
-  async function generar(fmt) {
+  async function generar() {
     setGenerando(true);
     try {
       const res = await exportMovimientosNegocios({ tipoMovimiento: [TIPO_DESISTIMIENTO], ...rangoDelMes(mes) });
@@ -57,8 +57,9 @@ function InformeDesistidos() {
         window.alert('No hay movimientos desistidos en ese mes.');
         return;
       }
-      if (fmt === 'xlsx') await exportarInformeDesistidosExcel({ mes, movimientos });
+      if (formato === 'xlsx') await exportarInformeDesistidosExcel({ mes, movimientos });
       else exportarInformeDesistidosPdf({ mes, movimientos });
+      onClose();
     } catch (err) {
       window.alert(`Error al generar el informe de desistidos: ${err.message}`);
     } finally {
@@ -67,20 +68,77 @@ function InformeDesistidos() {
   }
 
   return (
-    <div className={styles.informeDesistidos}>
-      <label className={styles.informeDesistidosEtiqueta} htmlFor="informe-desistidos-mes">Desistidos de</label>
-      <Select id="informe-desistidos-mes" value={mes} onChange={(e) => setMes(e.target.value)} disabled={generando}>
-        {meses.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-      </Select>
-      <SyncModoButton
-        opciones={FORMATOS_EXPORTAR_CONSOLIDADO}
-        modo={formato}
-        onModo={setFormato}
-        onEjecutar={generar}
-        disabled={generando}
-        Icono={FileX2}
-        ariaLabelFlecha="Elegir formato del informe de desistidos"
-      />
+    <Modal
+      open={open}
+      onClose={generando ? () => {} : onClose}
+      title="Informe de desistidos"
+      footer={(
+        <>
+          <Button variant="secondary" onClick={onClose} disabled={generando}>Cancelar</Button>
+          <Button onClick={generar} disabled={generando}>{generando ? 'Generando…' : 'Generar'}</Button>
+        </>
+      )}
+    >
+      <div className={styles.informeCampos}>
+        <Field label="Mes">
+          {(p) => (
+            <Select {...p} value={mes} onChange={(e) => setMes(e.target.value)} disabled={generando}>
+              {meses.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+            </Select>
+          )}
+        </Field>
+        <fieldset className={styles.informeFormato}>
+          <legend>Formato</legend>
+          <label><input type="radio" name="formato-desistidos" checked={formato === 'xlsx'} onChange={() => setFormato('xlsx')} disabled={generando} /> Excel</label>
+          <label><input type="radio" name="formato-desistidos" checked={formato === 'pdf'} onChange={() => setFormato('pdf')} disabled={generando} /> PDF</label>
+        </fieldset>
+        <p className={styles.informeNota}>
+          Solo movimientos de desistimiento con fecha contable en ese mes. El Excel trae un resumen por negocio (aportes devueltos, GMF y penalidades) y el detalle de cada movimiento; el PDF, el resumen.
+        </p>
+      </div>
+    </Modal>
+  );
+}
+
+// Un solo botón "Exportar" con menú: los movimientos que se ven en la tabla, e informes.
+function MenuExportar({ onExportMovimientos, exportando, sinResultados, total }) {
+  const [abierto, setAbierto] = useState(false);
+  const [informeAbierto, setInformeAbierto] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!abierto) return undefined;
+    function cerrar(e) {
+      if (ref.current && !ref.current.contains(e.target)) setAbierto(false);
+    }
+    document.addEventListener('mousedown', cerrar);
+    return () => document.removeEventListener('mousedown', cerrar);
+  }, [abierto]);
+
+  return (
+    <div className={base.exportWrap} ref={ref}>
+      <Button variant="secondary" onClick={() => setAbierto((a) => !a)} disabled={exportando} aria-haspopup="menu" aria-expanded={abierto}>
+        <span className={base.botonInterior}>
+          <Download size={14} aria-hidden="true" />
+          {exportando ? 'Exportando…' : 'Exportar'}
+          <ChevronDown size={14} aria-hidden="true" />
+        </span>
+      </Button>
+      {abierto && (
+        <div className={`${base.exportMenu} ${styles.menuExportar}`} role="menu">
+          <p className={styles.menuSeccion}>Movimientos</p>
+          <button type="button" role="menuitem" className={base.exportOption} disabled={sinResultados} onClick={() => { setAbierto(false); onExportMovimientos(); }}>
+            <span className={styles.menuTitulo}>Excel con los filtros actuales</span>
+            <span className={styles.menuDesc}>{total != null ? `${total.toLocaleString('es-CO')} movimientos` : 'Todos los movimientos filtrados'}</span>
+          </button>
+          <p className={styles.menuSeccion}>Informes</p>
+          <button type="button" role="menuitem" className={base.exportOption} onClick={() => { setAbierto(false); setInformeAbierto(true); }}>
+            <span className={styles.menuTitulo}><FileX2 size={14} aria-hidden="true" /> Informe de desistidos del mes…</span>
+            <span className={styles.menuDesc}>Resumen por negocio y detalle, en Excel o PDF</span>
+          </button>
+        </div>
+      )}
+      <ModalInformeDesistidos open={informeAbierto} onClose={() => setInformeAbierto(false)} />
     </div>
   );
 }
@@ -222,13 +280,7 @@ export function MovimientosPage() {
           </p>
         </div>
         <div className={base.acciones}>
-          <InformeDesistidos />
-          <Button variant="secondary" onClick={handleExport} disabled={exportando || !pagination || pagination.total === 0}>
-            <span className={base.botonInterior}>
-              <Download size={14} aria-hidden="true" />
-              {exportando ? 'Exportando…' : 'Exportar a Excel'}
-            </span>
-          </Button>
+          <MenuExportar onExportMovimientos={handleExport} exportando={exportando} sinResultados={!pagination || pagination.total === 0} total={pagination?.total} />
         </div>
       </div>
 

@@ -144,20 +144,70 @@ a.referencia:hover {
   color: var(--color-border-strong);
 }
 
-/* Informe de desistidos: etiqueta, mes y botón en una sola línea. */
-.informeDesistidos {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-sm);
+/* Menú Exportar (movimientos e informes) y ventana del informe de desistidos. */
+.menuExportar {
+  min-width: 290px;
 }
 
-.informeDesistidosEtiqueta {
+.menuSeccion {
+  margin: 8px 12px 4px;
+  font-size: var(--text-label-size);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.menuSeccion:first-child {
+  margin-top: 4px;
+}
+
+.menuTitulo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.menuDesc {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--text-label-size);
+  color: var(--color-ink-muted);
+}
+
+.informeCampos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-width: min(380px, 80vw);
+}
+
+.informeFormato {
+  display: flex;
+  gap: var(--space-lg);
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.informeFormato legend {
+  padding: 0;
+  margin-bottom: 6px;
   font-size: var(--text-label-size);
   font-weight: 600;
   color: var(--color-ink-muted);
-  white-space: nowrap;
 }
 
-.informeDesistidos select {
-  width: 170px;
+.informeFormato label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.informeNota {
+  margin: 0;
+  font-size: var(--text-data-size);
+  color: var(--color-ink-muted);
 }

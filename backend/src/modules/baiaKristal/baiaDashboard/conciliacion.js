@@ -87,12 +87,17 @@ function construirPlan(rows, fechaBase, { esPlanNegociado = true } = {}) {
 }
 
 const TIPOS_EXCLUIDOS_SIEMPRE = ['GENERADO POR VENTA UNIDAD'];
+// Cuando la fiducia registra el asiento de venta dos veces, lo corrige con un "AJUSTE MANUAL + y -" de comentario "Ajuste de
+// venta doble" (+valor de la venta). Como los asientos de venta no cuentan como pago, ese ajuste que los compensa tampoco: si
+// contara, el negocio aparecería con el doble de lo pagado (5 negocios de la Etapa 1).
+const esAjusteDeVentaDoble = (m) =>
+  String(m.datos?.['Tipo Movimiento'] || '').trim().toUpperCase() === 'AJUSTE MANUAL + Y -' && /venta\s+doble/i.test(String(m.datos?.Comentarios || ''));
 
 function normalizarPagos(movimientos) {
   const pagos = (movimientos || [])
     .filter((m) => {
       const tipo = String(m.datos?.['Tipo Movimiento'] || '').trim().toUpperCase();
-      return !TIPOS_EXCLUIDOS_SIEMPRE.includes(tipo);
+      return !TIPOS_EXCLUIDOS_SIEMPRE.includes(tipo) && !esAjusteDeVentaDoble(m);
     })
     .map((m) => ({
       id: m.idMovimiento ?? null,

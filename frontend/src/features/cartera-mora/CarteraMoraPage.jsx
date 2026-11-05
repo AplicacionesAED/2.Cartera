@@ -53,7 +53,9 @@ const EXCEL_COLUMNAS_INICIAL = [
   { key: 'unidad', header: 'UNIDAD', width: 16, align: 'left', render: (f) => f.unidad ?? '—' },
   { key: 'comprador', header: 'COMPRADOR', width: 32, align: 'left', render: (f) => f.comprador ?? '—' },
   { key: 'referencia', header: 'REFERENCIA', width: 16, align: 'left', render: (f) => f.referencia ?? '—' },
+  { key: 'area', header: 'ÁREA (M²)', width: 12, numFmt: '#,##0.00', render: (f) => f.area ?? null },
   { key: 'valorInmueble', header: 'VALOR APARTAMENTO', width: 20, numFmt: '#,##0', render: (f) => f.valorInmueble ?? 0 },
+  { key: 'valorM2', header: 'VALOR M²', width: 16, numFmt: '#,##0', render: (f) => (f.valorM2 != null ? Math.round(f.valorM2) : null) },
   { key: 'totalAbonado', header: 'VALOR ABONADO (CONCILIACIÓN)', width: 24, numFmt: '#,##0', render: (f) => f.totalAbonado ?? 0 },
   { key: 'cuotasEnMora', header: 'CUOTAS MORA', width: 14, numFmt: '#,##0', render: (f) => f.cuotasEnMora ?? 0 },
   { key: 'maxDiasAtraso', header: 'DÍAS ATRASO', width: 14, numFmt: '#,##0', tono: 'warning', render: (f) => f.maxDiasAtraso ?? 0 },
@@ -492,7 +494,9 @@ export function CarteraMoraPage() {
                           <th aria-sort={ariaSort(sort, 'unidad')}><SortHeader label="Nomenclatura" sortKey="unidad" sort={sort} onSort={toggleSort} /></th>
                           <th aria-sort={ariaSort(sort, 'comprador')}><SortHeader label="Comprador" sortKey="comprador" sort={sort} onSort={toggleSort} /></th>
                           <th aria-sort={ariaSort(sort, 'referencia')}><SortHeader label="Referencia" sortKey="referencia" sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'area')}><SortHeader label="Área (m²)" sortKey="area" sort={sort} onSort={toggleSort} align="center" /></th>
                           <th aria-sort={ariaSort(sort, 'valorInmueble')}><SortHeader label="Valor apartamento" sortKey="valorInmueble" sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'valorM2')}><SortHeader label="Valor m²" sortKey="valorM2" sort={sort} onSort={toggleSort} align="center" /></th>
                           <th aria-sort={ariaSort(sort, 'totalAbonado')}><SortHeader label="Valor abonado" sortKey="totalAbonado" sort={sort} onSort={toggleSort} align="center" /></th>
                           <th aria-sort={ariaSort(sort, 'cuotasEnMora')}><SortHeader label="Cuotas mora" sortKey="cuotasEnMora" sort={sort} onSort={toggleSort} align="center" /></th>
                           <th aria-sort={ariaSort(sort, 'maxDiasAtraso')}><SortHeader label="Días atraso" sortKey="maxDiasAtraso" sort={sort} onSort={toggleSort} align="center" /></th>
@@ -503,7 +507,7 @@ export function CarteraMoraPage() {
                     </thead>
                     <tbody>
                       {(meta.data ?? []).length === 0 ? (
-                        <tr><td colSpan={esContraentrega ? 7 : 11} className={styles.sinResultados}>Sin resultados.</td></tr>
+                        <tr><td colSpan={esContraentrega ? 7 : 13} className={styles.sinResultados}>Sin resultados.</td></tr>
                       ) : esContraentrega ? (
                         meta.data.map((f) => (
                           <tr key={f.id} onClick={(e) => abrirFila(e, f)} onContextMenu={(e) => abrirMenuContextual(e, f)} className={styles.filaCtxMenu}>
@@ -524,7 +528,9 @@ export function CarteraMoraPage() {
                             <td>{f.negocioId ? <Link to={`/negocios/inv-${f.id}`}>{f.unidad ?? f.id}</Link> : (f.unidad ?? '—')}</td>
                             <td className={styles.truncar} title={f.comprador ?? ''}>{f.comprador ?? '—'}</td>
                             <td>{f.referencia ?? '—'}</td>
+                            <td className={styles.numCellCentro}>{f.area != null ? f.area.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}</td>
                             <td className={styles.numCellCentro}>{f.valorInmueble != null ? formatCOP(f.valorInmueble) : '—'}</td>
+                            <td className={styles.numCellCentro}>{f.valorM2 != null ? formatCOP(f.valorM2) : '—'}</td>
                             <td className={styles.numCellCentro}>{f.totalAbonado != null ? formatCOP(f.totalAbonado) : '—'}</td>
                             <td className={styles.numCellCentro}>{f.cuotasEnMora}</td>
                             <td className={styles.numCellCentro}><ChipDias dias={f.maxDiasAtraso} /></td>

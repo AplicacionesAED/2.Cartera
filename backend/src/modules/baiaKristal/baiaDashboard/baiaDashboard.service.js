@@ -220,6 +220,11 @@ async function construirFilasCompletas() {
     const precioUnitarioNum = Number(inv.datos?.Unit_Price);
     const precioUnitario = !isNaN(precioUnitarioNum) && precioUnitarioNum > 0 ? precioUnitarioNum : null;
     if (valorInmueble == null && precioUnitario != null) valorInmueble = precioUnitario;
+    // Área en m² del negocio, tal cual viene en la hoja de la fiducia ("Area"); null si no hay negocio, no trae número o
+    // el número no es una área posible (la fiducia a veces trae "1" o "3626" en vez de 36.26) -- así no se calcula un
+    // valor m² absurdo.
+    const areaNum = Number(String(negocio?.datos?.Area ?? '').replace(',', '.'));
+    const area = !isNaN(areaNum) && areaNum >= 10 && areaNum <= 1000 ? areaNum : null;
     // Recaudado del Resumen: el Total pagado de la conciliación. Si el negocio no tiene oportunidad (no hay plan que
     // conciliar), se suman sus movimientos con la misma normalización de la conciliación (sin el asiento de venta y desde
     // el último desistimiento), para que sus pagos también cuenten.
@@ -267,6 +272,7 @@ async function construirFilasCompletas() {
       torre: info ? info.torre : null,
       nomenclatura: nomenclaturaCompleta({ proyecto: inv.proyecto, torre: inv.torre, piso: inv.piso, nombre: inv.nombre, datos: inv.datos }),
       unidad: inv.datos?.Product_Name ?? null,
+      area,
       valorInmueble,
       valorVentaFiducia,
       precioUnitario,
@@ -568,9 +574,9 @@ function claveRangoMora(dias) {
 const CAMPOS_ORDENABLES_MORA = new Set([
   'etapa', 'frente', 'torre', 'unidad', 'referencia', 'comprador', 'estado',
   'valorInmueble', 'totalAbonado', 'cuotasEnMora', 'maxDiasAtraso', 'montoEnMora', 'pctEnMora',
-  'fechaSaldoContraentrega',
+  'fechaSaldoContraentrega', 'area', 'valorM2',
 ]);
-const CAMPOS_NUMERICOS_MORA = new Set(['valorInmueble', 'totalAbonado', 'cuotasEnMora', 'maxDiasAtraso', 'montoEnMora', 'pctEnMora']);
+const CAMPOS_NUMERICOS_MORA = new Set(['valorInmueble', 'totalAbonado', 'cuotasEnMora', 'maxDiasAtraso', 'montoEnMora', 'pctEnMora', 'area', 'valorM2']);
 
 function ordenarCarteraMora(filas, sortBy, sortDir) {
   if (!CAMPOS_ORDENABLES_MORA.has(sortBy) || (sortDir !== 'asc' && sortDir !== 'desc')) {
@@ -640,7 +646,12 @@ async function obtenerCarteraMora({ search, etapa, frente, torre, rango, vista, 
   const totalEsperadoAFecha = filas.reduce((s, f) => s + (f.esperadoAFecha ?? 0), 0);
   const pctMoraPortafolio = totalEsperadoAFecha > 0 ? (totalMontoEnMora / totalEsperadoAFecha) * 100 : null;
 
-  filas = filas.map((f) => ({ ...f, pctEnMora: f.esperadoAFecha > 0 ? (f.montoEnMora / f.esperadoAFecha) * 100 : null }));
+  // Valor m² = valor del apartamento (el de la tabla) / área de la fiducia.
+  filas = filas.map((f) => ({
+    ...f,
+    pctEnMora: f.esperadoAFecha > 0 ? (f.montoEnMora / f.esperadoAFecha) * 100 : null,
+    valorM2: f.valorInmueble != null && f.area ? f.valorInmueble / f.area : null,
+  }));
   filas = ordenarCarteraMora(filas, sortBy, sortDir);
 
   const total = filas.length;

@@ -36,6 +36,8 @@ import { formatCOP, formatDate } from '../../utils/format.js';
 import { etiquetaEtapa } from '../../utils/etapas.js';
 import { Checkbox } from '../../components/ui/Checkbox.jsx';
 import { StatTile } from './StatTile.jsx';
+import { InfoTooltip } from '../../components/ui/InfoTooltip.jsx';
+import { INFO_COLUMNAS_DASHBOARD_BAIA, INFO_MES_DASHBOARD_BAIA } from './infoColumnasDashboardBaia.js';
 import dashStyles from './Dashboard.module.css';
 import styles from './DashboardPage.module.css';
 import { rutaApp } from '../../utils/rutas.js';
@@ -540,8 +542,8 @@ export function DashboardPage() {
 
       {meta.totalesColumnasFijas && !cargando && !enfocado && (
         <div className={`${dashStyles.statsGrid}`}>
-          <StatTile label="Valor del portafolio filtrado" value={formatCOP(meta.totalesColumnasFijas.valorInmueble ?? 0)} icon={Building2} tone="primary" />
-          <StatTile label="Total abonado" value={formatCOP(meta.totalesColumnasFijas.totalAbonado ?? 0)} icon={Wallet} tone="success" />
+          <StatTile label="Valor ventas fiduciaria" value={formatCOP(meta.totalesColumnasFijas.valorInmueble ?? 0)} icon={Building2} tone="primary" />
+          <StatTile label="Recaudado" value={formatCOP(meta.totalesColumnasFijas.totalAbonado ?? 0)} icon={Wallet} tone="success" />
           <StatTile label="Por recaudar" value={formatCOP(meta.totalesColumnasFijas.pendienteRecaudar ?? 0)} icon={Hourglass} tone="neutral" />
           <StatTile label="Valor proyectado" value={formatCOP((meta.totalesColumnasFijas.totalAbonado ?? 0) + (meta.totalesColumnasFijas.pendienteRecaudar ?? 0))} icon={TrendingUp} tone="primary" />
           <StatTile label={`En mora (${meta.totalesColumnasFijas.cuotasEnMora ?? 0} cuotas)`} value={formatCOP(meta.totalesColumnasFijas.montoEnMora ?? 0)} icon={AlertTriangle} tone="warning" warning={(meta.totalesColumnasFijas.montoEnMora ?? 0) > 0} />
@@ -642,7 +644,7 @@ function TablaDashboard({ filas, mesesFiltrados, vistaMeses, alcancePlan, totale
                   onClick={col.sortable ? () => onSort(col.id) : undefined}
                 >
                   <span className={styles.thFijaContenido}>
-                    {col.header}
+                    <InfoTooltip text={INFO_COLUMNAS_DASHBOARD_BAIA[col.id]} ajustado>{col.header}</InfoTooltip>
                     {col.sortable && <Icono size={12} className={activo ? styles.iconoActivo : styles.iconoInactivo} />}
                   </span>
                 </th>
@@ -664,9 +666,9 @@ function TablaDashboard({ filas, mesesFiltrados, vistaMeses, alcancePlan, totale
           <tr>
             {mesesFiltrados.map((mes, mesIdx) => (
               <Fragment key={mes}>
-                {vistaMeses !== 'recaudado' && <th className={`${styles.thMes} ${mesIdx % 2 === 1 ? styles.thMesImpar : ''} ${mesIdx > 0 ? styles.bordeMes : ''}`}>Proyectado</th>}
-                {vistaMeses !== 'esperado' && <th className={`${styles.thMes} ${mesIdx % 2 === 1 ? styles.thMesImpar : ''} ${vistaMeses === 'recaudado' && mesIdx > 0 ? styles.bordeMes : ''}`}>Recaudado</th>}
-                <th className={`${styles.thMes} ${mesIdx % 2 === 1 ? styles.thMesImpar : ''}`}>Por recaudar</th>
+                {vistaMeses !== 'recaudado' && <th className={`${styles.thMes} ${mesIdx % 2 === 1 ? styles.thMesImpar : ''} ${mesIdx > 0 ? styles.bordeMes : ''}`}><InfoTooltip text={INFO_MES_DASHBOARD_BAIA.proyectado} ajustado>Proyectado</InfoTooltip></th>}
+                {vistaMeses !== 'esperado' && <th className={`${styles.thMes} ${mesIdx % 2 === 1 ? styles.thMesImpar : ''} ${vistaMeses === 'recaudado' && mesIdx > 0 ? styles.bordeMes : ''}`}><InfoTooltip text={INFO_MES_DASHBOARD_BAIA.recaudado} ajustado>Recaudado</InfoTooltip></th>}
+                <th className={`${styles.thMes} ${mesIdx % 2 === 1 ? styles.thMesImpar : ''}`}><InfoTooltip text={INFO_MES_DASHBOARD_BAIA.porRecaudar} ajustado>Por recaudar</InfoTooltip></th>
               </Fragment>
             ))}
           </tr>

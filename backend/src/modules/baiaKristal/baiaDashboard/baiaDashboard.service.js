@@ -397,6 +397,39 @@ function ordenarDashboard(filas, sortBy, sortDir) {
   });
 }
 
+// Fila del Dashboard con TODOS sus valores de la fiducia, los mismos del Resumen (Consolidado y KPIs): valor de venta y
+// cuota inicial del Excel de la fiducia, y lo pagado según sus movimientos, tenga o no el negocio plan de pagos en Zoho. El
+// recaudado de cada mes y día también sale de los pagos de la fiducia (primero cubren la cuota inicial; lo que sobra es
+// crédito). Lo esperado y la mora siguen saliendo del plan de pagos de Zoho, porque son lo que se compara contra el recaudo.
+// Los inmuebles libres no tienen valores de fiducia: sus columnas quedan vacías.
+function filaDashboardDesdeFiducia(f) {
+  if (!esVendido(f)) {
+    return { ...f, valorInmueble: null, valorCuotaInicial: null, abonadoCuotaInicial: null, valorSaldoContraentrega: null, totalAbonado: null };
+  }
+  const aporte = aporteFiducia(f);
+  const conRecaudoFiducia = (plan, fiducia, campo) => {
+    const salida = {};
+    for (const clave of new Set([...Object.keys(plan ?? {}), ...Object.keys(fiducia ?? {})])) {
+      salida[clave] = { ...(plan?.[clave] ?? periodoVacio()), recaudado: fiducia?.[clave]?.[campo] ?? 0 };
+    }
+    return salida;
+  };
+  return {
+    ...f,
+    valorInmueble: aporte.venta,
+    valorCuotaInicial: aporte.cuotaInicial,
+    abonadoCuotaInicial: aporte.pagadoCuotaInicial,
+    valorSaldoContraentrega: Math.max(0, aporte.venta - aporte.cuotaInicial),
+    totalAbonado: aporte.pagado,
+    porMes: conRecaudoFiducia(f.porMes, f.recaudoFiduciaPorMes, 'total'),
+    porMesInicial: conRecaudoFiducia(f.porMesInicial, f.recaudoFiduciaPorMes, 'cuotaInicial'),
+    porMesContraentrega: conRecaudoFiducia(f.porMesContraentrega, f.recaudoFiduciaPorMes, 'credito'),
+    porDia: conRecaudoFiducia(f.porDia, f.recaudoFiduciaPorDia, 'total'),
+    porDiaInicial: conRecaudoFiducia(f.porDiaInicial, f.recaudoFiduciaPorDia, 'cuotaInicial'),
+    porDiaContraentrega: conRecaudoFiducia(f.porDiaContraentrega, f.recaudoFiduciaPorDia, 'credito'),
+  };
+}
+
 async function obtenerDashboardRecaudo({ search, etapa, frente, torre, conMovimientos, sortBy, sortDir, page, limit }) {
   const { filas: todasLasFilas, valores } = await obtenerCache();
 
@@ -407,6 +440,7 @@ async function obtenerDashboardRecaudo({ search, etapa, frente, torre, conMovimi
   }
   filas = filtrarCascadaEnMemoria(filas, { etapa, frente, torre });
   if (conMovimientos === 'true') filas = filas.filter((f) => f._tieneMovimientos);
+  filas = filas.map(filaDashboardDesdeFiducia);
   filas = ordenarDashboard(filas, sortBy, sortDir);
 
   const mesesSet = new Set();
@@ -529,7 +563,8 @@ async function obtenerDashboardRecaudo({ search, etapa, frente, torre, conMovimi
 
   const abonadoHaciaCuotaInicial = Math.min(totalesColumnasFijas.valorCuotaInicial, totalesColumnasFijas.totalAbonado);
   const abonadoHaciaContraentrega = Math.max(0, totalesColumnasFijas.totalAbonado - totalesColumnasFijas.valorCuotaInicial);
-  totalesColumnasFijas.pendienteRecaudar = Math.max(0, totalesColumnasFijas.valorInmueble - totalesColumnasFijas.totalAbonado);
+  // Por recaudar: etapa por etapa y nunca negativo, igual que el Resumen.
+  totalesColumnasFijas.pendienteRecaudar = totalesColumnasFijas.pendienteFiducia;
   totalesColumnasFijas.pendienteContraentrega = Math.max(0, totalesColumnasFijas.valorSaldoContraentrega - abonadoHaciaContraentrega);
   totalesColumnasFijas.recaudadoContraentrega = Math.min(abonadoHaciaContraentrega, totalesColumnasFijas.valorSaldoContraentrega);
 

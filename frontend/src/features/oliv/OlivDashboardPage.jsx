@@ -24,6 +24,8 @@ import { getDashboardRecaudoOliv } from '../../api/olivResumen.js';
 import { formatCOP, formatDate } from '../../utils/format.js';
 import { Checkbox } from '../../components/ui/Checkbox.jsx';
 import { StatTile } from '../dashboard/StatTile.jsx';
+import { InfoTooltip } from '../../components/ui/InfoTooltip.jsx';
+import { INFO_COLUMNAS_DASHBOARD_OLIV, INFO_MES_DASHBOARD_OLIV } from './infoColumnasDashboardOliv.js';
 import dashStyles from '../dashboard/Dashboard.module.css';
 import styles from '../dashboard/DashboardPage.module.css';
 import { rutaApp } from '../../utils/rutas.js';
@@ -585,7 +587,7 @@ function TablaDashboardOliv({ filas, mesesFiltrados, vistaMeses, alcancePlan, to
                   onClick={col.sortable ? () => onSort(col.id) : undefined}
                 >
                   <span className={styles.thFijaContenido}>
-                    {col.header}
+                    <InfoTooltip text={INFO_COLUMNAS_DASHBOARD_OLIV[col.id]} ajustado>{col.header}</InfoTooltip>
                     {col.sortable && <Icono size={12} className={activo ? styles.iconoActivo : styles.iconoInactivo} />}
                   </span>
                 </th>
@@ -607,9 +609,9 @@ function TablaDashboardOliv({ filas, mesesFiltrados, vistaMeses, alcancePlan, to
           <tr>
             {mesesFiltrados.map((mes, mesIdx) => (
               <Fragment key={mes}>
-                {vistaMeses !== 'recaudado' && <th className={`${styles.thMes} ${mesIdx % 2 === 1 ? styles.thMesImpar : ''} ${mesIdx > 0 ? styles.bordeMes : ''}`}>Proyectado</th>}
-                {vistaMeses !== 'esperado' && <th className={`${styles.thMes} ${mesIdx % 2 === 1 ? styles.thMesImpar : ''} ${vistaMeses === 'recaudado' && mesIdx > 0 ? styles.bordeMes : ''}`}>Recaudado</th>}
-                <th className={`${styles.thMes} ${mesIdx % 2 === 1 ? styles.thMesImpar : ''}`}>Por recaudar</th>
+                {vistaMeses !== 'recaudado' && <th className={`${styles.thMes} ${mesIdx % 2 === 1 ? styles.thMesImpar : ''} ${mesIdx > 0 ? styles.bordeMes : ''}`}><InfoTooltip text={INFO_MES_DASHBOARD_OLIV.proyectado} ajustado>Proyectado</InfoTooltip></th>}
+                {vistaMeses !== 'esperado' && <th className={`${styles.thMes} ${mesIdx % 2 === 1 ? styles.thMesImpar : ''} ${vistaMeses === 'recaudado' && mesIdx > 0 ? styles.bordeMes : ''}`}><InfoTooltip text={INFO_MES_DASHBOARD_OLIV.recaudado} ajustado>Recaudado</InfoTooltip></th>}
+                <th className={`${styles.thMes} ${mesIdx % 2 === 1 ? styles.thMesImpar : ''}`}><InfoTooltip text={INFO_MES_DASHBOARD_OLIV.porRecaudar} ajustado>Por recaudar</InfoTooltip></th>
               </Fragment>
             ))}
           </tr>

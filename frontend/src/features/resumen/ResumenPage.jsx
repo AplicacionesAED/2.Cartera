@@ -20,6 +20,7 @@
 // GET /oportunidades/sync/logs.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { exportarConsolidadoPdf } from './consolidadoPdf.js';
+import { exportarConsolidadoExcel } from './consolidadoExcel.js';
 import { Maximize2, Minimize2, Layers, MapPin, Building, X, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, Building2, Wallet, AlertTriangle, Hourglass, Target, KeyRound } from 'lucide-react';
 import { Field, Select } from '../../components/ui/Field.jsx';
 import { MultiSelect } from '../../components/ui/MultiSelect.jsx';
@@ -253,6 +254,7 @@ export function ResumenPage() {
   const [error, setError] = useState(null);
   const [cerrando, setCerrando] = useState(false);
   const [exportandoPdf, setExportandoPdf] = useState(false);
+  const [exportandoExcel, setExportandoExcel] = useState(false);
 
   // KPIs + tendencia (mismo backend que Dashboard Plan vs. Recaudo)
   const [planRecaudo, setPlanRecaudo] = useState(null);
@@ -453,6 +455,19 @@ export function ResumenPage() {
     }
   }
 
+  // Excel del consolidado del mes que se está viendo (mismas columnas, valores y colores que el PDF).
+  async function handleExportConsolidadoExcel() {
+    if (!datos) return;
+    setExportandoExcel(true);
+    try {
+      await exportarConsolidadoExcel({ datos, columnas: COLUMNAS, grupos: GRUPOS, tonos: TONOS_EXCEL, etiquetaEtapa });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setExportandoExcel(false);
+    }
+  }
+
   const lastSync = syncLogs[0];
   const syncOk = syncLogs.filter((s) => s.status === 'success').length;
   const syncErr = syncLogs.filter((s) => s.status === 'error').length;
@@ -634,6 +649,9 @@ export function ResumenPage() {
               )}
             </Field>
             {datos?.enVivo && <Badge variant="info">En vivo</Badge>}
+            <Button variant="secondary" onClick={handleExportConsolidadoExcel} disabled={!datos || exportandoExcel}>
+              {exportandoExcel ? 'Exportando…' : 'Exportar Excel'}
+            </Button>
             <Button variant="secondary" onClick={handleExportConsolidadoPdf} disabled={!datos || exportandoPdf}>
               {exportandoPdf ? 'Exportando…' : 'Exportar PDF'}
             </Button>

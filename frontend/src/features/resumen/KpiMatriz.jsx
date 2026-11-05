@@ -23,13 +23,14 @@ function Porcentaje({ pct, descripcion }) {
 
 // filas: [{ clave, label, totalidad, recaudado, porRecaudar: { valor, descripcion }, pct, vencidas: { cantidad, monto, descripcion } | null }]
 // inventario: [{ label, valor, sub, descripcion }]
-export function KpiMatriz({ titulo, notaTitulo, filas, inventarioTitulo, inventarioNota, inventario = [] }) {
+export function KpiMatriz({ titulo, alcance, notaTitulo, filas, inventarioTitulo, inventarioNota, inventario = [] }) {
   return (
     <section className={styles.tarjeta} aria-label={titulo}>
       <h3 className={styles.titulo}>
         {titulo}
         {notaTitulo && <InfoTooltip text={notaTitulo} />}
       </h3>
+      {alcance && <p className={styles.alcance}>{alcance}</p>}
       <div className={styles.scroll}>
         <table className={styles.tabla}>
           <thead>

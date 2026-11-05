@@ -19,6 +19,12 @@
   color: var(--color-ink);
 }
 
+.alcance {
+  margin: -4px 0 0;
+  font-size: var(--text-data-size);
+  color: var(--color-ink-muted);
+}
+
 .scroll {
   overflow-x: auto;
 }

@@ -36,7 +36,12 @@
   composes: tarjeta from '../../components/ui/Filtros.module.css';
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-sm);
+  /* Queda fija arriba al hacer scroll: los filtros se cambian viendo lo que filtran. */
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  padding-block: var(--space-md);
 }
 
 .toolbarFila {
@@ -119,6 +124,10 @@
 }
 
 .tendenciaPeriodoActual {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
   font-size: var(--text-label-size);
   color: var(--color-ink-muted);
 }

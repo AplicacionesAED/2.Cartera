@@ -40,6 +40,7 @@ import { formatDateTime } from '../../utils/format.js';
 import { EsperadoRecaudadoChart, fmtDia, fmtMes } from '../dashboard/charts/EsperadoRecaudadoChart.jsx';
 import { TorreRecaudoChart } from '../dashboard/charts/TorreRecaudoChart.jsx';
 import { KpiMatriz } from '../resumen/KpiMatriz.jsx';
+import { FiltrosActivos } from '../resumen/FiltrosActivos.jsx';
 import { exportarConsolidadoPdf } from '../resumen/consolidadoPdf.js';
 import dashStyles from '../dashboard/Dashboard.module.css';
 import styles from '../resumen/ResumenPage.module.css';
@@ -592,11 +593,19 @@ export function OlivResumenPage() {
           />
         )}
       </div>
+      <FiltrosActivos
+        alcance="Torre, Estado del inmueble y Periodo filtran los KPIs y la tendencia. El Consolidado de abajo usa su propio mes."
+        chips={[
+          ...torreFilter.map((v) => ({ clave: `torre-${v}`, texto: v, onQuitar: () => setTorreFilter(torreFilter.filter((x) => x !== v)) })),
+          ...estadoInmuebleFilter.map((v) => ({ clave: `estado-${v}`, texto: v, onQuitar: () => setEstadoInmuebleFilter(estadoInmuebleFilter.filter((x) => x !== v)) })),
+        ]}
+      />
       </div>
 
       {/* KPIs gerenciales */}
       <KpiMatriz
         titulo={`KPIs — ${labelVentana}`}
+        alcance="Filtrados por Torre, Estado del inmueble y periodo. Las cuotas vencidas y el inventario son a la fecha."
         filas={[
         {
           clave: '100',

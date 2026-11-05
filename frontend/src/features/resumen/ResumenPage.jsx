@@ -41,6 +41,7 @@ import { etiquetaEtapa, compararEtapas } from '../../utils/etapas.js';
 import { formatDateTime } from '../../utils/format.js';
 import { EsperadoRecaudadoChart, fmtDia, fmtMes } from '../dashboard/charts/EsperadoRecaudadoChart.jsx';
 import { KpiMatriz } from './KpiMatriz.jsx';
+import { FiltrosActivos } from './FiltrosActivos.jsx';
 import dashStyles from '../dashboard/Dashboard.module.css';
 import styles from './ResumenPage.module.css';
 
@@ -432,7 +433,6 @@ export function ResumenPage() {
     };
   }, [planRecaudo]);
 
-  const labelVentana = rangoTendencia === 'anio' ? `Año ${anioSeleccionado}` : (RANGOS_TENDENCIA.find((r) => r.key === rangoTendencia)?.label ?? '');
   const formatLabelTendencia = granularidadTendencia === 'dia' || granularidadTendencia === 'quincena' ? fmtDia : fmtMes;
 
   async function handleCerrarMes() {
@@ -523,30 +523,20 @@ export function ResumenPage() {
         )}
       </div>
 
-      {/* Filtro de periodo -- afecta KPIs y tendencia */}
-      <div className={`${styles.toolbarFila} ${styles.toolbarPeriodo}`}>
-        <span className={styles.filtroLabel}>Periodo</span>
-        <div className={dashStyles.toggleGroup}>
-          {RANGOS_TENDENCIA.map((r) => (
-            <button key={r.key} type="button" className={`${dashStyles.toggleButton} ${rangoTendencia === r.key ? dashStyles.toggleButtonActive : ''}`} onClick={() => setRangoTendencia(r.key)}>
-              {r.label}
-            </button>
-          ))}
-        </div>
-        {aniosDisponibles.length > 0 && (
-          <SelectorAnio
-            anios={aniosDisponibles}
-            value={anioSeleccionado}
-            activo={rangoTendencia === 'anio'}
-            onSeleccionar={(a) => { setAnioSeleccionado(a); setRangoTendencia('anio'); }}
-          />
-        )}
-      </div>
+      <FiltrosActivos
+        alcance="Etapa, Frente y Torre filtran los KPIs y la tendencia. El Consolidado de abajo usa su propio mes."
+        chips={[
+          ...etapaFilter.map((v) => ({ clave: `etapa-${v}`, texto: etiquetaEtapa(v), onQuitar: () => actualizarCascada('etapa', etapaFilter.filter((x) => x !== v)) })),
+          ...frenteFilter.map((v) => ({ clave: `frente-${v}`, texto: v, onQuitar: () => actualizarCascada('frente', frenteFilter.filter((x) => x !== v)) })),
+          ...torreFilter.map((v) => ({ clave: `torre-${v}`, texto: `Torre ${v}`, onQuitar: () => setTorreFilter(torreFilter.filter((x) => x !== v)) })),
+        ]}
+      />
       </div>
 
       {/* KPIs gerenciales */}
       <KpiMatriz
         titulo="KPIs — a la fecha"
+        alcance="Filtrados por Etapa, Frente y Torre; no cambian con el periodo."
         filas={[
         {
           clave: '100',
@@ -607,8 +597,23 @@ export function ResumenPage() {
             </div>
           </div>
           <div className={styles.tendenciaPeriodoActual}>
-            Periodo: <span className={styles.tendenciaPeriodoBadge}>{labelVentana}</span>
-            <span className={styles.tendenciaPeriodoNota}>— cambiar arriba, en "Periodo"</span>
+            <span className={styles.filtroLabel}>Periodo</span>
+            <div className={dashStyles.toggleGroup}>
+              {RANGOS_TENDENCIA.map((r) => (
+                <button key={r.key} type="button" className={`${dashStyles.toggleButton} ${rangoTendencia === r.key ? dashStyles.toggleButtonActive : ''}`} onClick={() => setRangoTendencia(r.key)}>
+                  {r.label}
+                </button>
+              ))}
+            </div>
+            {aniosDisponibles.length > 0 && (
+              <SelectorAnio
+                anios={aniosDisponibles}
+                value={anioSeleccionado}
+                activo={rangoTendencia === 'anio'}
+                onSeleccionar={(a) => { setAnioSeleccionado(a); setRangoTendencia('anio'); }}
+              />
+            )}
+            <span className={styles.tendenciaPeriodoNota}>Filtrada también por Etapa, Frente y Torre.</span>
           </div>
           <div className={dashStyles.toggleGroup}>
             {FILTROS_PORCENTAJE.map((f) => (
@@ -645,7 +650,7 @@ export function ResumenPage() {
               Consolidado de Cartera por Etapa
               <InfoTooltip text="Réplica en vivo del Excel “CONSOLIDADO DE CARTERA” que Gerencia arma cada mes. Las unidades y el precio de las disponibles salen del inventario de Zoho; las ventas, cuotas iniciales y pagos, de la fiducia; y la cartera, del plan de pagos de Zoho." />
             </h2>
-            <p className={styles.consolidadoSubtitulo}>Cifras en miles de millones de pesos (COP). Pasa el cursor sobre ⓘ para ver cómo se calcula cada columna.</p>
+            <p className={styles.consolidadoSubtitulo}>Cifras en miles de millones de pesos (COP). Pasa el cursor sobre ⓘ para ver cómo se calcula cada columna. No cambia con los filtros de ubicación ni de periodo: se elige su mes aquí.</p>
           </div>
           <div className={styles.consolidadoControles}>
             <div className={styles.selectorMes}>

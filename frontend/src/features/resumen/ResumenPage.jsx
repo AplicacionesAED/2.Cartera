@@ -21,7 +21,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { exportarConsolidadoPdf } from './consolidadoPdf.js';
 import { exportarConsolidadoExcel } from './consolidadoExcel.js';
-import { Maximize2, Minimize2, Layers, MapPin, Building, X, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, Building2, Wallet, AlertTriangle, Hourglass, Target, KeyRound, Download } from 'lucide-react';
+import { Maximize2, Minimize2, Layers, MapPin, Building, X, CheckCircle2, XCircle, Clock, Building2, Wallet, AlertTriangle, Hourglass, Target, KeyRound, Download } from 'lucide-react';
 import { Field } from '../../components/ui/Field.jsx';
 import { CampoMes } from '../../components/ui/CampoMes.jsx';
 import { etiquetaMesLarga } from '../../components/ui/SelectorMes.jsx';
@@ -40,7 +40,6 @@ import { getSyncLogsOportunidades } from '../../api/oportunidades.js';
 import { etiquetaEtapa, compararEtapas } from '../../utils/etapas.js';
 import { formatDateTime } from '../../utils/format.js';
 import { EsperadoRecaudadoChart, fmtDia, fmtMes } from '../dashboard/charts/EsperadoRecaudadoChart.jsx';
-import { EtapaRecaudoChart } from '../dashboard/charts/EtapaRecaudoChart.jsx';
 import { KpiBloque } from './KpiBloque.jsx';
 import dashStyles from '../dashboard/Dashboard.module.css';
 import styles from './ResumenPage.module.css';
@@ -269,7 +268,6 @@ export function ResumenPage() {
   const [anioSeleccionado, setAnioSeleccionado] = useState(new Date().getFullYear());
   const [filtroPorcentaje, setFiltroPorcentaje] = useEstadoRetorno('resumen:filtroPorcentaje', 'ambos');
   const [vistaLinea, setVistaLinea] = useEstadoRetorno('resumen:vistaLinea', 'ambos'); // 'ambos' | 'mensual' | 'acumulado'
-  const [etapaAbierta, setEtapaAbierta] = useState(false);
   const [enfocado, toggleEnfocado] = useModoEnfocado();
 
   const [etapaFilter, setEtapaFilter] = useState([]);
@@ -668,18 +666,6 @@ export function ResumenPage() {
         </div>
         <ConsolidadoCarteraEtapa data={datos} />
         {meses.length <= 1 && <p className={styles.avisoMeses}>Todavía no hay meses cerrados para navegar -- se va a ir guardando una foto automáticamente al cierre de cada mes.</p>}
-      </div>
-
-      {/* Recaudo por Etapa del proyecto (colapsable) */}
-      <div className={styles.consolidadoCard}>
-        <button type="button" className={styles.etapaToggle} onClick={() => setEtapaAbierta((v) => !v)}>
-          <h2 className={styles.consolidadoTitulo}>
-            Recaudo por Etapa del proyecto
-            <InfoTooltip text="Esperado según el plan de pagos de Zoho contra recaudado (pagos de la fiducia), agrupado por etapa constructiva (1, 2, 3…), no por la Etapa/Stage de Zoho." />
-          </h2>
-          {etapaAbierta ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </button>
-        {etapaAbierta && <EtapaRecaudoChart totalesPorEtapa={planRecaudo?.totalesPorEtapa ?? {}} />}
       </div>
 
       {/* Footer sync */}

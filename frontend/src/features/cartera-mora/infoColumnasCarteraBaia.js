@@ -7,6 +7,7 @@ export const INFO_COLUMNAS_CARTERA_BAIA = {
   unidad: 'Inventario de Zoho: nomenclatura del inmueble.',
   referencia: 'Excel de la fiducia, hoja "Movimientos": columna "Referencia".',
   comprador: 'Excel de la fiducia, hoja "Mov_Por_Propietario": columna "Propietario".',
+  fechaContrato: 'Excel de la fiducia, hoja "Movimientos": columna "Fecha Contrato" del negocio (fecha de vinculación). Vacía si la fiducia no la trae.',
   area: 'Excel de la fiducia: columna "Área" del negocio. Si no trae un valor posible, el área construida del Inventario de Zoho.',
   valorInmueble: 'Calculado: suma de las cuotas del plan de pagos de Zoho, ajustada a la columna "Valor Venta" de la hoja "Movimientos" de la fiducia.',
   valorM2: 'Calculado: Valor apartamento ÷ Área (m²).',

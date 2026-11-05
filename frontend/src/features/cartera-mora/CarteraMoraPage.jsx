@@ -54,6 +54,7 @@ const EXCEL_COLUMNAS_INICIAL = [
   { key: 'frenteTorre', header: 'FRENTE/TORRE', width: 20, align: 'left', render: (f) => f.frenteTorre || '—' },
   { key: 'unidad', header: 'UNIDAD', width: 16, align: 'left', render: (f) => f.unidad ?? '—' },
   { key: 'comprador', header: 'COMPRADOR', width: 32, align: 'left', render: (f) => f.comprador ?? '—' },
+  { key: 'fechaContrato', header: 'FECHA DE CONTRATO', width: 18, isDate: true, render: (f) => (f.fechaContrato ? new Date(f.fechaContrato) : null) },
   { key: 'referencia', header: 'REFERENCIA', width: 16, align: 'left', render: (f) => f.referencia ?? '—' },
   { key: 'area', header: 'ÁREA (M²)', width: 12, numFmt: '#,##0.00', render: (f) => f.area ?? null },
   { key: 'valorInmueble', header: 'VALOR APARTAMENTO', width: 20, numFmt: '#,##0', render: (f) => f.valorInmueble ?? 0 },
@@ -69,6 +70,7 @@ const EXCEL_COLUMNAS_CONTRAENTREGA = [
   { key: 'frenteTorre', header: 'FRENTE/TORRE', width: 20, align: 'left', render: (f) => f.frenteTorre || '—' },
   { key: 'unidad', header: 'UNIDAD', width: 16, align: 'left', render: (f) => f.unidad ?? '—' },
   { key: 'comprador', header: 'COMPRADOR', width: 32, align: 'left', render: (f) => f.comprador ?? '—' },
+  { key: 'fechaContrato', header: 'FECHA DE CONTRATO', width: 18, isDate: true, render: (f) => (f.fechaContrato ? new Date(f.fechaContrato) : null) },
   { key: 'referencia', header: 'REFERENCIA', width: 16, align: 'left', render: (f) => f.referencia ?? '—' },
   { key: 'fechaSaldoContraentrega', header: 'FECHA VENCIDA', width: 16, isDate: true, tono: 'warning', render: (f) => (f.fechaSaldoContraentrega ? new Date(f.fechaSaldoContraentrega) : null) },
   { key: 'montoEnMora', header: 'VALOR PENDIENTE', width: 20, numFmt: '#,##0', tono: 'danger', render: (f) => f.montoEnMora ?? 0 },
@@ -485,6 +487,7 @@ export function CarteraMoraPage() {
                           <th><InfoTooltip text={INFO_COLUMNAS_CARTERA_BAIA.frenteTorre}>Frente/Torre</InfoTooltip></th>
                           <th aria-sort={ariaSort(sort, 'unidad')}><SortHeader label="Nomenclatura" sortKey="unidad" info={INFO_COLUMNAS_CARTERA_BAIA.unidad} sort={sort} onSort={toggleSort} /></th>
                           <th aria-sort={ariaSort(sort, 'comprador')}><SortHeader label="Comprador" sortKey="comprador" info={INFO_COLUMNAS_CARTERA_BAIA.comprador} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'fechaContrato')}><SortHeader label="Fecha de contrato" sortKey="fechaContrato" sort={sort} onSort={toggleSort} align="center" info={INFO_COLUMNAS_CARTERA_BAIA.fechaContrato} /></th>
                           <th aria-sort={ariaSort(sort, 'referencia')}><SortHeader label="Referencia" sortKey="referencia" info={INFO_COLUMNAS_CARTERA_BAIA.referencia} sort={sort} onSort={toggleSort} /></th>
                           <th aria-sort={ariaSort(sort, 'fechaSaldoContraentrega')}><SortHeader label="Fecha vencida" sortKey="fechaSaldoContraentrega" info={INFO_COLUMNAS_CARTERA_BAIA.fechaSaldoContraentrega} sort={sort} onSort={toggleSort} align="center" /></th>
                           <th aria-sort={ariaSort(sort, 'montoEnMora')}><SortHeader label="Valor pendiente" sortKey="montoEnMora" info={INFO_COLUMNAS_CARTERA_BAIA.montoEnMora} sort={sort} onSort={toggleSort} align="center" /></th>
@@ -495,6 +498,7 @@ export function CarteraMoraPage() {
                           <th><InfoTooltip text={INFO_COLUMNAS_CARTERA_BAIA.frenteTorre}>Frente/Torre</InfoTooltip></th>
                           <th aria-sort={ariaSort(sort, 'unidad')}><SortHeader label="Nomenclatura" sortKey="unidad" info={INFO_COLUMNAS_CARTERA_BAIA.unidad} sort={sort} onSort={toggleSort} /></th>
                           <th aria-sort={ariaSort(sort, 'comprador')}><SortHeader label="Comprador" sortKey="comprador" info={INFO_COLUMNAS_CARTERA_BAIA.comprador} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'fechaContrato')}><SortHeader label="Fecha de contrato" sortKey="fechaContrato" sort={sort} onSort={toggleSort} align="center" info={INFO_COLUMNAS_CARTERA_BAIA.fechaContrato} /></th>
                           <th aria-sort={ariaSort(sort, 'referencia')}><SortHeader label="Referencia" sortKey="referencia" info={INFO_COLUMNAS_CARTERA_BAIA.referencia} sort={sort} onSort={toggleSort} /></th>
                           <th aria-sort={ariaSort(sort, 'area')}><SortHeader label="Área (m²)" sortKey="area" info={INFO_COLUMNAS_CARTERA_BAIA.area} sort={sort} onSort={toggleSort} align="center" /></th>
                           <th aria-sort={ariaSort(sort, 'valorInmueble')}><SortHeader label="Valor apartamento" sortKey="valorInmueble" info={INFO_COLUMNAS_CARTERA_BAIA.valorInmueble} sort={sort} onSort={toggleSort} align="center" /></th>
@@ -509,7 +513,7 @@ export function CarteraMoraPage() {
                     </thead>
                     <tbody>
                       {(meta.data ?? []).length === 0 ? (
-                        <tr><td colSpan={esContraentrega ? 7 : 13} className={styles.sinResultados}>Sin resultados.</td></tr>
+                        <tr><td colSpan={esContraentrega ? 8 : 14} className={styles.sinResultados}>Sin resultados.</td></tr>
                       ) : esContraentrega ? (
                         meta.data.map((f) => (
                           <tr key={f.id} onClick={(e) => abrirFila(e, f)} onContextMenu={(e) => abrirMenuContextual(e, f)} className={styles.filaCtxMenu}>
@@ -517,6 +521,7 @@ export function CarteraMoraPage() {
                             <td><CeldaDoble arriba={f.frente} abajo={f.torre != null ? `Torre ${f.torre}` : null} /></td>
                             <td>{f.unidad ?? '—'}</td>
                             <td className={styles.truncar} title={f.comprador ?? ''}>{f.comprador ?? '—'}</td>
+                            <td className={styles.numCellCentro}>{f.fechaContrato ? formatDate(f.fechaContrato) : '—'}</td>
                             <td>{f.referencia ?? '—'}</td>
                             <td className={`${styles.numCellCentro} ${styles.tonoWarning}`}>{formatDate(f.fechaSaldoContraentrega)}</td>
                             <td className={styles.numCellCentro}><ValorVencido valor={f.montoEnMora} /></td>
@@ -529,6 +534,7 @@ export function CarteraMoraPage() {
                             <td><CeldaDoble arriba={f.frente} abajo={f.torre != null ? `Torre ${f.torre}` : null} /></td>
                             <td>{f.negocioId ? <Link to={`/negocios/inv-${f.id}`}>{f.unidad ?? f.id}</Link> : (f.unidad ?? '—')}</td>
                             <td className={styles.truncar} title={f.comprador ?? ''}>{f.comprador ?? '—'}</td>
+                            <td className={styles.numCellCentro}>{f.fechaContrato ? formatDate(f.fechaContrato) : '—'}</td>
                             <td>{f.referencia ?? '—'}</td>
                             <td className={styles.numCellCentro}>{f.area != null ? f.area.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}</td>
                             <td className={styles.numCellCentro}>{f.valorInmueble != null ? formatCOP(f.valorInmueble) : '—'}</td>

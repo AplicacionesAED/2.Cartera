@@ -228,6 +228,10 @@ async function construirFilasCompletas() {
       return !isNaN(n) && n >= 10 && n <= 1000 ? n : null;
     };
     const area = areaPosible(negocio?.datos?.Area) ?? areaPosible(inv.datos?.Area_Construida_m2_v2_RP) ?? areaPosible(inv.datos?.Area_Privada_m2_RP);
+    // Fecha de contrato del negocio (columna "Fecha Contrato" de la fiducia, que llega como número de serie de Excel),
+    // como AAAA-MM-DD; null si el negocio no la trae.
+    const contratoSerial = Number(negocio?.datos?.['Fecha Contrato']);
+    const fechaContrato = !isNaN(contratoSerial) && contratoSerial > 20000 ? new Date(Math.round((contratoSerial - 25569) * 86400000)).toISOString().slice(0, 10) : null;
     // Recaudado del Resumen: el Total pagado de la conciliación. Si el negocio no tiene oportunidad (no hay plan que
     // conciliar), se suman sus movimientos con la misma normalización de la conciliación (sin el asiento de venta y desde
     // el último desistimiento), para que sus pagos también cuenten.
@@ -275,6 +279,7 @@ async function construirFilasCompletas() {
       torre: info ? info.torre : null,
       nomenclatura: nomenclaturaCompleta({ proyecto: inv.proyecto, torre: inv.torre, piso: inv.piso, nombre: inv.nombre, datos: inv.datos }),
       unidad: inv.datos?.Product_Name ?? null,
+      fechaContrato,
       area,
       valorInmueble,
       valorVentaFiducia,
@@ -386,7 +391,7 @@ function ordenarDashboard(filas, sortBy, sortDir) {
     if (va == null) return 1;
     if (vb == null) return -1;
     if (sortBy === 'etapa') return dir * compararEtapas(va, vb);
-    if (sortBy === 'fechaSaldoContraentrega') return dir * (new Date(va) - new Date(vb));
+    if (sortBy === 'fechaSaldoContraentrega' || sortBy === 'fechaContrato') return dir * (new Date(va) - new Date(vb));
     if (CAMPOS_NUMERICOS_DASHBOARD.has(sortBy)) return dir * (va - vb);
     return dir * String(va).localeCompare(String(vb), 'es', { numeric: true, sensitivity: 'base' });
   });
@@ -577,7 +582,7 @@ function claveRangoMora(dias) {
 const CAMPOS_ORDENABLES_MORA = new Set([
   'etapa', 'frente', 'torre', 'unidad', 'referencia', 'comprador', 'estado',
   'valorInmueble', 'totalAbonado', 'cuotasEnMora', 'maxDiasAtraso', 'montoEnMora', 'pctEnMora',
-  'fechaSaldoContraentrega', 'area', 'valorM2',
+  'fechaSaldoContraentrega', 'area', 'valorM2', 'fechaContrato',
 ]);
 const CAMPOS_NUMERICOS_MORA = new Set(['valorInmueble', 'totalAbonado', 'cuotasEnMora', 'maxDiasAtraso', 'montoEnMora', 'pctEnMora', 'area', 'valorM2']);
 

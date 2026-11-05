@@ -26,6 +26,7 @@ import { Field, Select } from '../../components/ui/Field.jsx';
 import { MultiSelect } from '../../components/ui/MultiSelect.jsx';
 import { frentesDisponibles as frentesDisponiblesCascada, torresDisponibles, podarSeleccion } from '../../utils/cascadaFiltros.js';
 import { Button } from '../../components/ui/Button.jsx';
+import { ExportMenu } from '../../components/ui/ExportMenu.jsx';
 import { Badge } from '../../components/ui/Badge.jsx';
 import { InfoTooltip } from '../../components/ui/InfoTooltip.jsx';
 import { useAuth } from '../../auth/AuthContext.jsx';
@@ -649,12 +650,11 @@ export function ResumenPage() {
               )}
             </Field>
             {datos?.enVivo && <Badge variant="info">En vivo</Badge>}
-            <Button variant="secondary" onClick={handleExportConsolidadoExcel} disabled={!datos || exportandoExcel}>
-              {exportandoExcel ? 'Exportando…' : 'Exportar Excel'}
-            </Button>
-            <Button variant="secondary" onClick={handleExportConsolidadoPdf} disabled={!datos || exportandoPdf}>
-              {exportandoPdf ? 'Exportando…' : 'Exportar PDF'}
-            </Button>
+            <ExportMenu
+              formatos={['xlsx', 'pdf']}
+              disabled={!datos || exportandoExcel || exportandoPdf}
+              onExport={(fmt) => (fmt === 'xlsx' ? handleExportConsolidadoExcel() : handleExportConsolidadoPdf())}
+            />
           </div>
         </div>
         <ConsolidadoCarteraEtapa data={datos} />

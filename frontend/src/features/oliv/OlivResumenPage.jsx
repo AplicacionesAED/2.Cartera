@@ -22,6 +22,7 @@ import { Maximize2, Minimize2, MapPin, Building2, X, ChevronDown, ChevronUp, Che
 import { Field, Select } from '../../components/ui/Field.jsx';
 import { MultiSelect } from '../../components/ui/MultiSelect.jsx';
 import { Button } from '../../components/ui/Button.jsx';
+import { ExportMenu } from '../../components/ui/ExportMenu.jsx';
 import { Badge } from '../../components/ui/Badge.jsx';
 import { InfoTooltip } from '../../components/ui/InfoTooltip.jsx';
 import { useAuth } from '../../auth/AuthContext.jsx';
@@ -693,12 +694,11 @@ export function OlivResumenPage() {
             )}
           </Field>
           {datos?.enVivo && <Badge variant="info">En vivo</Badge>}
-          <Button variant="secondary" className={styles.exportarConsolidado} onClick={handleExportConsolidado} disabled={!datos || exportandoConsolidado}>
-            {exportandoConsolidado ? 'Exportando…' : 'Exportar Consolidado (Excel)'}
-          </Button>
-          <Button variant="secondary" onClick={handleExportConsolidadoPdf} disabled={!datos || exportandoPdf}>
-            {exportandoPdf ? 'Exportando…' : 'Exportar Consolidado (PDF)'}
-          </Button>
+          <ExportMenu
+            formatos={['xlsx', 'pdf']}
+            disabled={!datos || exportandoConsolidado || exportandoPdf}
+            onExport={(fmt) => (fmt === 'xlsx' ? handleExportConsolidado() : handleExportConsolidadoPdf())}
+          />
         </div>
         <ConsolidadoCarteraTorre data={datos} />
         {meses.length <= 1 && <p className={styles.avisoMeses}>Todavía no hay meses cerrados para navegar -- se va a ir guardando una foto automáticamente al cierre de cada mes.</p>}

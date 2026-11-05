@@ -11,7 +11,8 @@ const FORMATOS = [
   ['PDF', 'pdf'],
 ];
 
-export function ExportMenu({ onExport, disabled }) {
+// `formatos` (opcional): cuáles de esos formatos ofrece, ej. ['xlsx', 'pdf']; por defecto todos.
+export function ExportMenu({ onExport, disabled, formatos }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -34,7 +35,7 @@ export function ExportMenu({ onExport, disabled }) {
       </Button>
       {open && (
         <div className={styles.exportMenu} role="menu">
-          {FORMATOS.map(([label, fmt]) => (
+          {FORMATOS.filter(([, fmt]) => !formatos || formatos.includes(fmt)).map(([label, fmt]) => (
             <button
               key={fmt}
               type="button"

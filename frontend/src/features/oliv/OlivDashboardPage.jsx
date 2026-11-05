@@ -13,6 +13,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, Fragment } from 'react';
 import ExcelJS from 'exceljs';
 import { Search, Building2, MapPin, X, Download, CalendarRange, Maximize2, Minimize2, History, Briefcase, Warehouse, ExternalLink, ChevronUp, ChevronDown, ChevronsUpDown, Wallet, Hourglass, AlertTriangle, TrendingUp } from 'lucide-react';
+import { CampoMes } from '../../components/ui/CampoMes.jsx';
 import { Field, TextInput } from '../../components/ui/Field.jsx';
 import { MultiSelect } from '../../components/ui/MultiSelect.jsx';
 import { Button } from '../../components/ui/Button.jsx';
@@ -436,18 +437,17 @@ export function OlivDashboardPage() {
         {filtrosAvanzados && (
         <div className={styles.controlesFila}>
         {meses.length > 0 && (
-          <Field className={styles.campoFiltro} label={<span className={styles.labelConIcono}><CalendarRange size={13} />Desde</span>}>
+          <Field className={styles.campoFiltro} label={<span className={styles.labelConIcono}><CalendarRange size={13} />Periodo (meses)</span>}>
             {(p) => (
-              <TextInput {...p} type="month" value={filtros.mesDesde} min={meses[0]} max={filtros.mesHasta || meses[meses.length - 1]}
-                onChange={(e) => actualizarFiltro('mesDesde', e.target.value)} />
-            )}
-          </Field>
-        )}
-        {meses.length > 0 && (
-          <Field className={styles.campoFiltro} label={<span className={styles.labelConIcono}><CalendarRange size={13} />Hasta</span>}>
-            {(p) => (
-              <TextInput {...p} type="month" value={filtros.mesHasta} min={filtros.mesDesde || meses[0]} max={meses[meses.length - 1]}
-                onChange={(e) => actualizarFiltro('mesHasta', e.target.value)} />
+              <CampoMes
+                id={p.id}
+                rango
+                value={{ desde: filtros.mesDesde, hasta: filtros.mesHasta }}
+                disponibles={new Set(meses)}
+                placeholder="Todos los meses"
+                onChange={({ desde, hasta }) => { actualizarFiltro('mesDesde', desde); actualizarFiltro('mesHasta', hasta); }}
+                onLimpiar={() => { actualizarFiltro('mesDesde', ''); actualizarFiltro('mesHasta', ''); }}
+              />
             )}
           </Field>
         )}

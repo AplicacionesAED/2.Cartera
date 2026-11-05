@@ -77,6 +77,17 @@
   cursor: not-allowed;
 }
 
+.mesEnRango {
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.ayuda {
+  margin: 2px 0 0;
+  font-size: var(--text-label-size);
+  color: var(--color-ink-muted);
+  text-align: center;
+}
+
 .mesActivo {
   background: var(--color-primary);
   color: #fff;

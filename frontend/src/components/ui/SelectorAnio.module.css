@@ -1,0 +1,57 @@
+.grupo {
+  display: inline-flex;
+  align-items: stretch;
+  background: #fff;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.grupoActivo {
+  border-color: var(--color-primary);
+}
+
+.flecha,
+.anio {
+  border: none;
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.flecha {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+}
+
+.anio {
+  min-width: 84px;
+  padding: 0 10px;
+  font-weight: 500;
+}
+
+.grupoActivo .anio {
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+.flecha:hover:not(:disabled),
+.anio:hover:not([aria-pressed='true']) {
+  background: var(--color-surface-sunken);
+}
+
+.flecha:disabled {
+  color: var(--color-ink-muted);
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.flecha:focus-visible,
+.anio:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}

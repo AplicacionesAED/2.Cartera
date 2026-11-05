@@ -23,7 +23,8 @@ import base from '../negocios/NegociosPage.module.css';
 import styles from './MovimientosPage.module.css';
 import { MovimientosTabla, formatCell, cleanNombre, shortFideicomiso } from './MovimientosTabla.jsx';
 import { Modal } from '../../components/ui/Modal.jsx';
-import { SelectorMes } from '../../components/ui/SelectorMes.jsx';
+import { SelectorMes, etiquetaMesLarga } from '../../components/ui/SelectorMes.jsx';
+import { CampoMes } from '../../components/ui/CampoMes.jsx';
 import { TIPO_DESISTIMIENTO, etiquetaMes, mesDeFecha, exportarInformeDesistidosExcel, exportarInformeDesistidosPdf } from './informeDesistidos.js';
 
 function useDebounce(value, delay = 350) {
@@ -173,6 +174,12 @@ function MenuExportar({ onExportMovimientos, exportando, sinResultados, total })
   );
 }
 
+// Primer y último día de un mes 'AAAA-MM' como AAAA-MM-DD, para llenar el rango de fechas.
+function rangoDeMes(mes) {
+  const [anio, m] = mes.split('-').map(Number);
+  return { desde: `${mes}-01`, hasta: `${mes}-${String(new Date(anio, m, 0).getDate()).padStart(2, '0')}` };
+}
+
 export function MovimientosPage() {
   const [resultado, setResultado] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -204,6 +211,8 @@ export function MovimientosPage() {
   function clearAll() {
     setSearch(''); setFideicomisoFilter([]); setEstadoFilter([]); setTipoMovFilter([]); setFechaDesde(''); setFechaHasta(''); setDatePreset('');
   }
+  // Si las fechas elegidas son justo un mes completo, el selector de mes lo muestra como elegido.
+  const mesCompleto = fechaDesde && fechaDesde.endsWith('-01') && fechaHasta === rangoDeMes(fechaDesde.slice(0, 7)).hasta ? fechaDesde.slice(0, 7) : '';
   const hasFilters = search || fideicomisoFilter.length || estadoFilter.length || tipoMovFilter.length || fechaDesde || fechaHasta;
 
   async function handleExport() {
@@ -366,6 +375,13 @@ export function MovimientosPage() {
         </Field>
         <div className={styles.presets}>
           <span className={styles.presetsTitulo}>Rango rápido</span>
+          <CampoMes
+            value={mesCompleto}
+            maxMes={new Date().toISOString().slice(0, 7)}
+            placeholder="Mes completo"
+            etiqueta={etiquetaMesLarga}
+            onChange={(m) => { const r = rangoDeMes(m); setFechaDesde(r.desde); setFechaHasta(r.hasta); setDatePreset(''); }}
+          />
           {PRESETS.map(({ label, months }) => (
             <button
               key={months}

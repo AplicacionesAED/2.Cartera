@@ -19,7 +19,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import ExcelJS from 'exceljs';
 import { Maximize2, Minimize2, MapPin, Building2, X, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, Wallet, AlertTriangle, Hourglass, Target, KeyRound, Download } from 'lucide-react';
-import { Field, Select } from '../../components/ui/Field.jsx';
+import { Field } from '../../components/ui/Field.jsx';
+import { CampoMes } from '../../components/ui/CampoMes.jsx';
+import { etiquetaMesLarga } from '../../components/ui/SelectorMes.jsx';
+import { SelectorAnio } from '../../components/ui/SelectorAnio.jsx';
 import { MultiSelect } from '../../components/ui/MultiSelect.jsx';
 import { Button } from '../../components/ui/Button.jsx';
 import { SyncModoButton, FORMATOS_EXPORTAR_CONSOLIDADO } from '../../components/SyncModoButton.jsx';
@@ -578,14 +581,12 @@ export function OlivResumenPage() {
           ))}
         </div>
         {aniosDisponibles.length > 0 && (
-          <select
-            value={rangoTendencia === 'anio' ? anioSeleccionado : ''}
-            onChange={(e) => { setAnioSeleccionado(Number(e.target.value)); setRangoTendencia('anio'); }}
-            className={`${dashStyles.toggleButton} ${rangoTendencia === 'anio' ? dashStyles.toggleButtonActive : ''}`}
-          >
-            <option value="" disabled>Filtrar por año…</option>
-            {aniosDisponibles.map((a) => <option key={a} value={a}>{a}</option>)}
-          </select>
+          <SelectorAnio
+            anios={aniosDisponibles}
+            value={anioSeleccionado}
+            activo={rangoTendencia === 'anio'}
+            onSeleccionar={(a) => { setAnioSeleccionado(a); setRangoTendencia('anio'); }}
+          />
         )}
       </div>
       </div>
@@ -689,9 +690,13 @@ export function OlivResumenPage() {
         <div className={styles.consolidadoControles}>
           <div className={styles.selectorMes}>
             <label className={styles.selectorMesEtiqueta} htmlFor="consolidado-mes">Mes</label>
-            <Select id="consolidado-mes" value={mes} onChange={(e) => setMes(e.target.value)}>
-              {meses.map((m) => <option key={m.mes} value={m.mes}>{m.etiqueta}</option>)}
-            </Select>
+            <CampoMes
+              id="consolidado-mes"
+              value={mes}
+              onChange={setMes}
+              disponibles={new Set(meses.map((m) => m.mes))}
+              etiqueta={(v) => meses.find((m) => m.mes === v)?.etiqueta ?? etiquetaMesLarga(v)}
+            />
           </div>
           {datos?.enVivo && <Badge variant="info">En vivo</Badge>}
           <SyncModoButton

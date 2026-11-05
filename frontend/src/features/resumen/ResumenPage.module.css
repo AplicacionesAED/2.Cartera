@@ -269,10 +269,6 @@
   color: var(--color-ink-muted);
 }
 
-.selectorMes select {
-  width: 190px;
-}
-
 .consolidadoWrap {
   overflow-x: auto;
   border: 1px solid var(--color-border);

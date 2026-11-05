@@ -1,0 +1,27 @@
+// De dónde sale cada columna de la tabla de Cartera en Gestión de Oliv (tooltip del encabezado). Las llaves son las
+// `sortKey` de la tabla; el cálculo está en backend/src/modules/oliv/olivResumen/olivResumen.service.js.
+export const INFO_COLUMNAS_CARTERA_OLIV = {
+  fechaContrato: 'HubSpot, oportunidad: fecha en que entró a la Etapa 8 (Vinculación exitosa).',
+  estado: 'HubSpot, oportunidad: etapa actual en el pipeline de negocios de Oliv.',
+  torre: 'HubSpot, objeto Unidades: torre del inmueble.',
+  unidad: 'HubSpot, objeto Unidades: código de la unidad (ya incluye la torre).',
+  area: 'HubSpot, objeto Unidades: área construida del inmueble.',
+  comprador: 'HubSpot, oportunidad: nombre del contacto, sin el prefijo del proyecto.',
+  tipoIdentificacion: 'HubSpot, contacto asociado: propiedad "Tipo de Identificación", que llena el formulario de vinculación a fiducia. Se actualiza al sincronizar las oportunidades.',
+  identificacion: 'HubSpot, contacto asociado: "Número de Identificación". Si falta, se usa la del Excel de la fiducia o la de la cotización.',
+  paisResidencia: 'HubSpot, contacto asociado: propiedad "País". Si falta, el país de ciudadanía de la oportunidad.',
+  departamentoResidencia: 'HubSpot, contacto asociado: propiedad "Departamentos de Colombia". Se actualiza al sincronizar las oportunidades.',
+  telefono: 'HubSpot, oportunidad: teléfono móvil. Si falta, el de la cotización aceptada.',
+  email: 'HubSpot, oportunidad: correo. Si falta, el de la cotización aceptada.',
+  valorInmueble: 'Calculado: suma del plan de pagos de la cotización aceptada (Centro de Aplicaciones Comerciales). Incluye el parqueadero y ya trae descuentos y bono aplicados.',
+  valorApartamento: 'Cotización aceptada (Centro de Aplicaciones Comerciales): valor del apartamento, sin parqueadero y antes de descuentos y bono.',
+  valorParqueadero: 'Cotización aceptada (Centro de Aplicaciones Comerciales): precio del parqueadero asignado.',
+  totalAbonado: 'Calculado: pagos del Excel de Encargos de la fiducia aplicados, en orden, contra el plan de pagos de la cotización aceptada.',
+  pctRecaudo: 'Calculado: Abonado total ÷ Valor total del negocio.',
+  porRecibir: 'Calculado: Valor total del negocio − Abonado total (nunca menor a cero).',
+  valorCuotaInicial: 'Calculado: suma de las cuotas del plan de pagos de la cotización aceptada, sin la última (el saldo contraentrega).',
+  credito: 'Calculado: Valor total del negocio − Valor de contado. Es la última cuota del plan (saldo contraentrega).',
+  referenciaRecaudo: 'HubSpot, oportunidad: referencia de recaudo.',
+  fechaSaldoContraentrega: 'Calculado: fecha de la última cuota del plan de pagos de la cotización aceptada (saldo contraentrega).',
+  montoEnMora: 'Calculado: lo que falta por pagar de esa última cuota, según los pagos del Excel de Encargos de la fiducia.',
+};

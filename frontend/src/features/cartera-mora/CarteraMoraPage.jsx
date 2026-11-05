@@ -17,6 +17,8 @@ import { Field, TextInput } from '../../components/ui/Field.jsx';
 import { MultiSelect } from '../../components/ui/MultiSelect.jsx';
 import { frentesDisponibles, torresDisponibles, podarSeleccion } from '../../utils/cascadaFiltros.js';
 import { SortHeader } from '../../components/ui/SortHeader.jsx';
+import { InfoTooltip } from '../../components/ui/InfoTooltip.jsx';
+import { INFO_COLUMNAS_CARTERA_BAIA } from './infoColumnasCarteraBaia.js';
 import { Button } from '../../components/ui/Button.jsx';
 import { Tabs } from '../../components/ui/Tabs.jsx';
 import { Pagination } from '../../components/ui/Pagination.jsx';
@@ -479,29 +481,29 @@ export function CarteraMoraPage() {
                     <thead>
                       {esContraentrega ? (
                         <tr>
-                          <th aria-sort={ariaSort(sort, 'etapa')}><SortHeader label="Etapa" sortKey="etapa" sort={sort} onSort={toggleSort} /></th>
-                          <th>Frente/Torre</th>
-                          <th aria-sort={ariaSort(sort, 'unidad')}><SortHeader label="Nomenclatura" sortKey="unidad" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'comprador')}><SortHeader label="Comprador" sortKey="comprador" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'referencia')}><SortHeader label="Referencia" sortKey="referencia" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'fechaSaldoContraentrega')}><SortHeader label="Fecha vencida" sortKey="fechaSaldoContraentrega" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'montoEnMora')}><SortHeader label="Valor pendiente" sortKey="montoEnMora" sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'etapa')}><SortHeader label="Etapa" sortKey="etapa" info={INFO_COLUMNAS_CARTERA_BAIA.etapa} sort={sort} onSort={toggleSort} /></th>
+                          <th><InfoTooltip text={INFO_COLUMNAS_CARTERA_BAIA.frenteTorre}>Frente/Torre</InfoTooltip></th>
+                          <th aria-sort={ariaSort(sort, 'unidad')}><SortHeader label="Nomenclatura" sortKey="unidad" info={INFO_COLUMNAS_CARTERA_BAIA.unidad} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'comprador')}><SortHeader label="Comprador" sortKey="comprador" info={INFO_COLUMNAS_CARTERA_BAIA.comprador} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'referencia')}><SortHeader label="Referencia" sortKey="referencia" info={INFO_COLUMNAS_CARTERA_BAIA.referencia} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'fechaSaldoContraentrega')}><SortHeader label="Fecha vencida" sortKey="fechaSaldoContraentrega" info={INFO_COLUMNAS_CARTERA_BAIA.fechaSaldoContraentrega} sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'montoEnMora')}><SortHeader label="Valor pendiente" sortKey="montoEnMora" info={INFO_COLUMNAS_CARTERA_BAIA.montoEnMora} sort={sort} onSort={toggleSort} align="center" /></th>
                         </tr>
                       ) : (
                         <tr>
-                          <th aria-sort={ariaSort(sort, 'etapa')}><SortHeader label="Etapa" sortKey="etapa" sort={sort} onSort={toggleSort} /></th>
-                          <th>Frente/Torre</th>
-                          <th aria-sort={ariaSort(sort, 'unidad')}><SortHeader label="Nomenclatura" sortKey="unidad" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'comprador')}><SortHeader label="Comprador" sortKey="comprador" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'referencia')}><SortHeader label="Referencia" sortKey="referencia" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'area')}><SortHeader label="Área (m²)" sortKey="area" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'valorInmueble')}><SortHeader label="Valor apartamento" sortKey="valorInmueble" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'valorM2')}><SortHeader label="Valor m²" sortKey="valorM2" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'totalAbonado')}><SortHeader label="Valor abonado" sortKey="totalAbonado" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'cuotasEnMora')}><SortHeader label="Cuotas mora" sortKey="cuotasEnMora" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'maxDiasAtraso')}><SortHeader label="Días atraso" sortKey="maxDiasAtraso" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'montoEnMora')}><SortHeader label="Valor vencido" sortKey="montoEnMora" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'pctEnMora')}><SortHeader label="% en mora" sortKey="pctEnMora" sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'etapa')}><SortHeader label="Etapa" sortKey="etapa" info={INFO_COLUMNAS_CARTERA_BAIA.etapa} sort={sort} onSort={toggleSort} /></th>
+                          <th><InfoTooltip text={INFO_COLUMNAS_CARTERA_BAIA.frenteTorre}>Frente/Torre</InfoTooltip></th>
+                          <th aria-sort={ariaSort(sort, 'unidad')}><SortHeader label="Nomenclatura" sortKey="unidad" info={INFO_COLUMNAS_CARTERA_BAIA.unidad} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'comprador')}><SortHeader label="Comprador" sortKey="comprador" info={INFO_COLUMNAS_CARTERA_BAIA.comprador} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'referencia')}><SortHeader label="Referencia" sortKey="referencia" info={INFO_COLUMNAS_CARTERA_BAIA.referencia} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'area')}><SortHeader label="Área (m²)" sortKey="area" info={INFO_COLUMNAS_CARTERA_BAIA.area} sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'valorInmueble')}><SortHeader label="Valor apartamento" sortKey="valorInmueble" info={INFO_COLUMNAS_CARTERA_BAIA.valorInmueble} sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'valorM2')}><SortHeader label="Valor m²" sortKey="valorM2" info={INFO_COLUMNAS_CARTERA_BAIA.valorM2} sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'totalAbonado')}><SortHeader label="Valor abonado" sortKey="totalAbonado" info={INFO_COLUMNAS_CARTERA_BAIA.totalAbonado} sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'cuotasEnMora')}><SortHeader label="Cuotas mora" sortKey="cuotasEnMora" info={INFO_COLUMNAS_CARTERA_BAIA.cuotasEnMora} sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'maxDiasAtraso')}><SortHeader label="Días atraso" sortKey="maxDiasAtraso" info={INFO_COLUMNAS_CARTERA_BAIA.maxDiasAtraso} sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'montoEnMora')}><SortHeader label="Valor vencido" sortKey="montoEnMora" info={INFO_COLUMNAS_CARTERA_BAIA.montoEnMora} sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'pctEnMora')}><SortHeader label="% en mora" sortKey="pctEnMora" info={INFO_COLUMNAS_CARTERA_BAIA.pctEnMora} sort={sort} onSort={toggleSort} align="center" /></th>
                         </tr>
                       )}
                     </thead>

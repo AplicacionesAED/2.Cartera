@@ -23,6 +23,7 @@ import { AlertTriangle, Search, Building2, MapPin, X, Briefcase, Warehouse, Exte
 import { Field, TextInput } from '../../components/ui/Field.jsx';
 import { MultiSelect } from '../../components/ui/MultiSelect.jsx';
 import { SortHeader } from '../../components/ui/SortHeader.jsx';
+import { INFO_COLUMNAS_CARTERA_OLIV } from './infoColumnasCarteraOliv.js';
 import { Button } from '../../components/ui/Button.jsx';
 import { Tabs } from '../../components/ui/Tabs.jsx';
 import { Pagination } from '../../components/ui/Pagination.jsx';
@@ -382,35 +383,35 @@ export function OlivCarteraMoraPage() {
                     <thead>
                       {esContraentrega ? (
                         <tr>
-                          <th aria-sort={ariaSort(sort, 'torre')}><SortHeader label="Torre" sortKey="torre" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'unidad')}><SortHeader label="Nomenclatura" sortKey="unidad" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'comprador')}><SortHeader label="Comprador" sortKey="comprador" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'referenciaRecaudo')}><SortHeader label="Referencia" sortKey="referenciaRecaudo" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'fechaSaldoContraentrega')}><SortHeader label="Fecha vencida" sortKey="fechaSaldoContraentrega" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'montoEnMora')}><SortHeader label="Valor pendiente" sortKey="montoEnMora" sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'torre')}><SortHeader label="Torre" sortKey="torre" info={INFO_COLUMNAS_CARTERA_OLIV.torre} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'unidad')}><SortHeader label="Nomenclatura" sortKey="unidad" info={INFO_COLUMNAS_CARTERA_OLIV.unidad} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'comprador')}><SortHeader label="Comprador" sortKey="comprador" info={INFO_COLUMNAS_CARTERA_OLIV.comprador} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'referenciaRecaudo')}><SortHeader label="Referencia" sortKey="referenciaRecaudo" info={INFO_COLUMNAS_CARTERA_OLIV.referenciaRecaudo} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'fechaSaldoContraentrega')}><SortHeader label="Fecha vencida" sortKey="fechaSaldoContraentrega" info={INFO_COLUMNAS_CARTERA_OLIV.fechaSaldoContraentrega} sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'montoEnMora')}><SortHeader label="Valor pendiente" sortKey="montoEnMora" info={INFO_COLUMNAS_CARTERA_OLIV.montoEnMora} sort={sort} onSort={toggleSort} align="center" /></th>
                         </tr>
                       ) : (
                         <tr>
-                          <th aria-sort={ariaSort(sort, 'fechaContrato')}><SortHeader label="Fecha de venta" sortKey="fechaContrato" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'estado')}><SortHeader label="Etapa" sortKey="estado" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'torre')}><SortHeader label="Torre" sortKey="torre" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'unidad')}><SortHeader label="Nomenclatura" sortKey="unidad" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'area')}><SortHeader label="Área (m²)" sortKey="area" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'comprador')}><SortHeader label="Comprador" sortKey="comprador" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'tipoIdentificacion')}><SortHeader label="Tipo de identificación" sortKey="tipoIdentificacion" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'identificacion')}><SortHeader label="Identificación" sortKey="identificacion" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'paisResidencia')}><SortHeader label="País de residencia" sortKey="paisResidencia" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'departamentoResidencia')}><SortHeader label="Departamento de residencia" sortKey="departamentoResidencia" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'telefono')}><SortHeader label="Teléfono" sortKey="telefono" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'email')}><SortHeader label="Correo electrónico" sortKey="email" sort={sort} onSort={toggleSort} /></th>
-                          <th aria-sort={ariaSort(sort, 'valorInmueble')}><SortHeader label="Valor total del negocio" sortKey="valorInmueble" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'valorApartamento')}><SortHeader label="Valor total del inmueble" sortKey="valorApartamento" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'valorParqueadero')}><SortHeader label="Valor del parqueadero" sortKey="valorParqueadero" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'totalAbonado')}><SortHeader label="Abonado total" sortKey="totalAbonado" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'pctRecaudo')}><SortHeader label="% recibido total" sortKey="pctRecaudo" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'porRecibir')}><SortHeader label="Por recibir" sortKey="porRecibir" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'valorCuotaInicial')}><SortHeader label="Valor de contado" sortKey="valorCuotaInicial" sort={sort} onSort={toggleSort} align="center" /></th>
-                          <th aria-sort={ariaSort(sort, 'credito')}><SortHeader label="Valor crédito" sortKey="credito" sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'fechaContrato')}><SortHeader label="Fecha de venta" sortKey="fechaContrato" info={INFO_COLUMNAS_CARTERA_OLIV.fechaContrato} sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'estado')}><SortHeader label="Etapa" sortKey="estado" info={INFO_COLUMNAS_CARTERA_OLIV.estado} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'torre')}><SortHeader label="Torre" sortKey="torre" info={INFO_COLUMNAS_CARTERA_OLIV.torre} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'unidad')}><SortHeader label="Nomenclatura" sortKey="unidad" info={INFO_COLUMNAS_CARTERA_OLIV.unidad} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'area')}><SortHeader label="Área (m²)" sortKey="area" info={INFO_COLUMNAS_CARTERA_OLIV.area} sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'comprador')}><SortHeader label="Comprador" sortKey="comprador" info={INFO_COLUMNAS_CARTERA_OLIV.comprador} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'tipoIdentificacion')}><SortHeader label="Tipo de identificación" sortKey="tipoIdentificacion" info={INFO_COLUMNAS_CARTERA_OLIV.tipoIdentificacion} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'identificacion')}><SortHeader label="Identificación" sortKey="identificacion" info={INFO_COLUMNAS_CARTERA_OLIV.identificacion} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'paisResidencia')}><SortHeader label="País de residencia" sortKey="paisResidencia" info={INFO_COLUMNAS_CARTERA_OLIV.paisResidencia} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'departamentoResidencia')}><SortHeader label="Departamento de residencia" sortKey="departamentoResidencia" info={INFO_COLUMNAS_CARTERA_OLIV.departamentoResidencia} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'telefono')}><SortHeader label="Teléfono" sortKey="telefono" info={INFO_COLUMNAS_CARTERA_OLIV.telefono} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'email')}><SortHeader label="Correo electrónico" sortKey="email" info={INFO_COLUMNAS_CARTERA_OLIV.email} sort={sort} onSort={toggleSort} /></th>
+                          <th aria-sort={ariaSort(sort, 'valorInmueble')}><SortHeader label="Valor total del negocio" sortKey="valorInmueble" info={INFO_COLUMNAS_CARTERA_OLIV.valorInmueble} sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'valorApartamento')}><SortHeader label="Valor total del inmueble" sortKey="valorApartamento" info={INFO_COLUMNAS_CARTERA_OLIV.valorApartamento} sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'valorParqueadero')}><SortHeader label="Valor del parqueadero" sortKey="valorParqueadero" info={INFO_COLUMNAS_CARTERA_OLIV.valorParqueadero} sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'totalAbonado')}><SortHeader label="Abonado total" sortKey="totalAbonado" info={INFO_COLUMNAS_CARTERA_OLIV.totalAbonado} sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'pctRecaudo')}><SortHeader label="% recibido total" sortKey="pctRecaudo" info={INFO_COLUMNAS_CARTERA_OLIV.pctRecaudo} sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'porRecibir')}><SortHeader label="Por recibir" sortKey="porRecibir" info={INFO_COLUMNAS_CARTERA_OLIV.porRecibir} sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'valorCuotaInicial')}><SortHeader label="Valor de contado" sortKey="valorCuotaInicial" info={INFO_COLUMNAS_CARTERA_OLIV.valorCuotaInicial} sort={sort} onSort={toggleSort} align="center" /></th>
+                          <th aria-sort={ariaSort(sort, 'credito')}><SortHeader label="Valor crédito" sortKey="credito" info={INFO_COLUMNAS_CARTERA_OLIV.credito} sort={sort} onSort={toggleSort} align="center" /></th>
                         </tr>
                       )}
                     </thead>

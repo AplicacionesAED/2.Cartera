@@ -2,16 +2,18 @@
 // frontend/src/components/ui/SortHeader.jsx del proyecto nuevo, junto con
 // hooks/useSortableTable.js (componentes/hooks/) -- se usan siempre juntos.
 // Ver "Sortable columns" en ARQUITECTURA-FRONTEND.md.
+import { InfoTooltip } from './InfoTooltip.jsx';
 import styles from './SortHeader.module.css';
 
 // Se coloca DENTRO de un <th> ya existente (no reemplaza al <th> en si) para
 // heredar el padding/tipografia que cada tabla ya define en su propio CSS
 // Module -- este componente solo agrega el boton clicable + la flecha de
 // orden, sin pelearse por especificidad de CSS con la tabla que lo usa.
-export function SortHeader({ label, sortKey, sort, onSort, align = 'left' }) {
+// `info` (opcional): texto que sale al pasar el mouse por el encabezado, ej. de dónde viene la columna.
+export function SortHeader({ label, sortKey, sort, onSort, align = 'left', info }) {
   const direction = sort.key === sortKey ? sort.direction : null;
   const icono = direction === 'asc' ? '▲' : direction === 'desc' ? '▼' : '⇅';
-  return (
+  const boton = (
     <button type="button" className={styles.sortHeader} data-align={align} onClick={() => onSort(sortKey)}>
       {/* Copia invisible del icono, solo en align="center": sin esto el
           grupo texto+icono se centra COMO GRUPO, y el icono (visible solo
@@ -27,4 +29,5 @@ export function SortHeader({ label, sortKey, sort, onSort, align = 'left' }) {
       </span>
     </button>
   );
+  return info ? <InfoTooltip text={info}>{boton}</InfoTooltip> : boton;
 }

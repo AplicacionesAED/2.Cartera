@@ -15,7 +15,8 @@ const SEPARACION = 8;
 // icono), no como hija del icono: dentro de una tabla con scroll, una tarjeta con `overflow` o un panel, una burbuja
 // `absolute` queda recortada por el contenedor y no se ve. Se coloca arriba del icono (abajo si no cabe) y se ajusta
 // para no salirse de la pantalla.
-export function InfoTooltip({ text, titulo }) {
+// Con `children` no dibuja el icono "i": el tooltip sale al pasar el mouse por esos hijos (ej. el encabezado de una columna).
+export function InfoTooltip({ text, titulo, children }) {
   const id = useId();
   const disparador = useRef(null);
   const burbuja = useRef(null);
@@ -52,19 +53,21 @@ export function InfoTooltip({ text, titulo }) {
   return (
     <span
       ref={disparador}
-      className={styles.wrapper}
-      tabIndex={0}
+      className={children ? styles.inline : styles.wrapper}
+      tabIndex={children ? undefined : 0}
       aria-describedby={abierto ? id : undefined}
       onMouseEnter={abrir}
       onMouseLeave={cerrar}
       onFocus={abrir}
       onBlur={cerrar}
     >
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-        <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2" />
-        <path d="M7 6.4V10.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-        <circle cx="7" cy="4.2" r="0.9" fill="currentColor" />
-      </svg>
+      {children ?? (
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2" />
+          <path d="M7 6.4V10.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          <circle cx="7" cy="4.2" r="0.9" fill="currentColor" />
+        </svg>
+      )}
       {anfitrion && createPortal(
         <span
           ref={burbuja}

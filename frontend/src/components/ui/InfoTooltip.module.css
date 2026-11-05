@@ -12,6 +12,13 @@
   transition: color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
 }
 
+/* Variante sin icono: envuelve a otro elemento (ej. encabezado de columna) y solo le agrega el tooltip. */
+.inline {
+  display: block;
+  width: 100%;
+  cursor: help;
+}
+
 .wrapper:hover,
 .wrapper:focus-visible {
   color: var(--color-primary);

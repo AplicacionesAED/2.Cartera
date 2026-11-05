@@ -222,9 +222,12 @@ async function construirFilasCompletas() {
     if (valorInmueble == null && precioUnitario != null) valorInmueble = precioUnitario;
     // Área en m² del negocio, tal cual viene en la hoja de la fiducia ("Area"); null si no hay negocio, no trae número o
     // el número no es una área posible (la fiducia a veces trae "1" o "3626" en vez de 36.26) -- así no se calcula un
-    // valor m² absurdo.
-    const areaNum = Number(String(negocio?.datos?.Area ?? '').replace(',', '.'));
-    const area = !isNaN(areaNum) && areaNum >= 10 && areaNum <= 1000 ? areaNum : null;
+    // valor m² absurdo. En ese caso (o si no hay negocio) se usa el área construida del inventario de Zoho.
+    const areaPosible = (v) => {
+      const n = Number(String(v ?? '').replace(',', '.'));
+      return !isNaN(n) && n >= 10 && n <= 1000 ? n : null;
+    };
+    const area = areaPosible(negocio?.datos?.Area) ?? areaPosible(inv.datos?.Area_Construida_m2_v2_RP) ?? areaPosible(inv.datos?.Area_Privada_m2_RP);
     // Recaudado del Resumen: el Total pagado de la conciliación. Si el negocio no tiene oportunidad (no hay plan que
     // conciliar), se suman sus movimientos con la misma normalización de la conciliación (sin el asiento de venta y desde
     // el último desistimiento), para que sus pagos también cuenten.

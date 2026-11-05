@@ -23,7 +23,7 @@ export function SortHeader({ label, sortKey, sort, onSort, align = 'left', info 
           fantasma balancea el ancho del icono real para que el texto caiga
           en el centro verdadero. */}
       {align === 'center' && <span className={styles.arrow} aria-hidden="true" style={{ visibility: 'hidden' }}>{icono}</span>}
-      <span>{label}</span>
+      <span data-tooltip-ancla>{label}</span>
       <span className={styles.arrow} data-active={direction != null || undefined}>
         {icono}
       </span>

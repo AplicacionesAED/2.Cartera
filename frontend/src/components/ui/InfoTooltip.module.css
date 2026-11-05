@@ -19,6 +19,11 @@
   cursor: help;
 }
 
+.inlineAjustado {
+  display: inline-block;
+  cursor: help;
+}
+
 .wrapper:hover,
 .wrapper:focus-visible {
   color: var(--color-primary);

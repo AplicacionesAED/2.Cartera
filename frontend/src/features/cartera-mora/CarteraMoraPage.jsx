@@ -484,7 +484,7 @@ export function CarteraMoraPage() {
                       {esContraentrega ? (
                         <tr>
                           <th aria-sort={ariaSort(sort, 'etapa')}><SortHeader label="Etapa" sortKey="etapa" info={INFO_COLUMNAS_CARTERA_BAIA.etapa} sort={sort} onSort={toggleSort} /></th>
-                          <th><InfoTooltip text={INFO_COLUMNAS_CARTERA_BAIA.frenteTorre}>Frente/Torre</InfoTooltip></th>
+                          <th><InfoTooltip text={INFO_COLUMNAS_CARTERA_BAIA.frenteTorre} ajustado>Frente/Torre</InfoTooltip></th>
                           <th aria-sort={ariaSort(sort, 'unidad')}><SortHeader label="Nomenclatura" sortKey="unidad" info={INFO_COLUMNAS_CARTERA_BAIA.unidad} sort={sort} onSort={toggleSort} /></th>
                           <th aria-sort={ariaSort(sort, 'comprador')}><SortHeader label="Comprador" sortKey="comprador" info={INFO_COLUMNAS_CARTERA_BAIA.comprador} sort={sort} onSort={toggleSort} /></th>
                           <th aria-sort={ariaSort(sort, 'fechaContrato')}><SortHeader label="Fecha de contrato" sortKey="fechaContrato" sort={sort} onSort={toggleSort} align="center" info={INFO_COLUMNAS_CARTERA_BAIA.fechaContrato} /></th>
@@ -495,7 +495,7 @@ export function CarteraMoraPage() {
                       ) : (
                         <tr>
                           <th aria-sort={ariaSort(sort, 'etapa')}><SortHeader label="Etapa" sortKey="etapa" info={INFO_COLUMNAS_CARTERA_BAIA.etapa} sort={sort} onSort={toggleSort} /></th>
-                          <th><InfoTooltip text={INFO_COLUMNAS_CARTERA_BAIA.frenteTorre}>Frente/Torre</InfoTooltip></th>
+                          <th><InfoTooltip text={INFO_COLUMNAS_CARTERA_BAIA.frenteTorre} ajustado>Frente/Torre</InfoTooltip></th>
                           <th aria-sort={ariaSort(sort, 'unidad')}><SortHeader label="Nomenclatura" sortKey="unidad" info={INFO_COLUMNAS_CARTERA_BAIA.unidad} sort={sort} onSort={toggleSort} /></th>
                           <th aria-sort={ariaSort(sort, 'comprador')}><SortHeader label="Comprador" sortKey="comprador" info={INFO_COLUMNAS_CARTERA_BAIA.comprador} sort={sort} onSort={toggleSort} /></th>
                           <th aria-sort={ariaSort(sort, 'fechaContrato')}><SortHeader label="Fecha de contrato" sortKey="fechaContrato" sort={sort} onSort={toggleSort} align="center" info={INFO_COLUMNAS_CARTERA_BAIA.fechaContrato} /></th>

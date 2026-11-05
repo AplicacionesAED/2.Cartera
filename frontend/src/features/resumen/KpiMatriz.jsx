@@ -7,7 +7,7 @@ import styles from './KpiMatriz.module.css';
 
 function Cifra({ valor, descripcion, className = '' }) {
   const contenido = <span className={`${styles.valor} ${className}`}>{valor}</span>;
-  return descripcion ? <InfoTooltip text={descripcion}>{contenido}</InfoTooltip> : contenido;
+  return descripcion ? <InfoTooltip text={descripcion} ajustado>{contenido}</InfoTooltip> : contenido;
 }
 
 function Porcentaje({ pct, descripcion }) {
@@ -18,7 +18,7 @@ function Porcentaje({ pct, descripcion }) {
       <span className={styles.pista} aria-hidden="true"><span className={styles.relleno} style={{ width: `${Math.min(100, Math.max(0, pct))}%` }} /></span>
     </span>
   );
-  return descripcion ? <InfoTooltip text={descripcion}>{barra}</InfoTooltip> : barra;
+  return descripcion ? <InfoTooltip text={descripcion} ajustado>{barra}</InfoTooltip> : barra;
 }
 
 // filas: [{ clave, label, totalidad, recaudado, porRecaudar: { valor, descripcion }, pct, vencidas: { cantidad, monto, descripcion } | null }]
@@ -52,7 +52,7 @@ export function KpiMatriz({ titulo, notaTitulo, filas, inventarioTitulo, inventa
                 <td><Porcentaje pct={f.pct} descripcion="Recaudado ÷ Totalidad." /></td>
                 <td>
                   {f.vencidas ? (
-                    <InfoTooltip text={f.vencidas.descripcion}>
+                    <InfoTooltip text={f.vencidas.descripcion} ajustado>
                       <span className={`${styles.valor} ${styles.alerta}`}>
                         {f.vencidas.cantidad}
                         {f.vencidas.monto && <span className={styles.sub}> · {f.vencidas.monto}</span>}
@@ -74,7 +74,7 @@ export function KpiMatriz({ titulo, notaTitulo, filas, inventarioTitulo, inventa
             {inventarioNota && <InfoTooltip text={inventarioNota} />}
           </span>
           {inventario.map((i) => (
-            <InfoTooltip key={i.label} text={i.descripcion}>
+            <InfoTooltip key={i.label} text={i.descripcion} ajustado>
               <span className={styles.inventarioItem}>
                 <span className={styles.inventarioEtiqueta}>{i.label}</span>
                 <span className={styles.valor}>{i.valor}</span>

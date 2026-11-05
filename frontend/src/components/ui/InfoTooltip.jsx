@@ -16,7 +16,8 @@ const SEPARACION = 8;
 // `absolute` queda recortada por el contenedor y no se ve. Se coloca arriba del icono (abajo si no cabe) y se ajusta
 // para no salirse de la pantalla.
 // Con `children` no dibuja el icono "i": el tooltip sale al pasar el mouse por esos hijos (ej. el encabezado de una columna).
-export function InfoTooltip({ text, titulo, children }) {
+// `ajustado`: el área sensible se ajusta al contenido (cifras, textos sueltos) en vez de ocupar todo el ancho disponible.
+export function InfoTooltip({ text, titulo, children, ajustado = false }) {
   const id = useId();
   const disparador = useRef(null);
   const burbuja = useRef(null);
@@ -26,7 +27,8 @@ export function InfoTooltip({ text, titulo, children }) {
   useLayoutEffect(() => {
     if (!abierto || !disparador.current || !burbuja.current) return undefined;
     const colocar = () => {
-      const r = disparador.current.getBoundingClientRect();
+      // El centro es el del contenido que se señala (`data-tooltip-ancla`, o los hijos), no el de toda la celda o columna.
+      const r = (disparador.current.querySelector('[data-tooltip-ancla]') ?? disparador.current).getBoundingClientRect();
       const b = burbuja.current.getBoundingClientRect();
       const arriba = r.top - b.height - SEPARACION >= MARGEN;
       const top = arriba ? r.top - b.height - SEPARACION : r.bottom + SEPARACION;
@@ -53,7 +55,7 @@ export function InfoTooltip({ text, titulo, children }) {
   return (
     <span
       ref={disparador}
-      className={children ? styles.inline : styles.wrapper}
+      className={children ? (ajustado ? styles.inlineAjustado : styles.inline) : styles.wrapper}
       tabIndex={children ? undefined : 0}
       aria-describedby={abierto ? id : undefined}
       onMouseEnter={abrir}

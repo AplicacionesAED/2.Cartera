@@ -17,20 +17,9 @@ export function etiquetaMes(mes) {
   return `${MESES[m - 1]} ${anio}`;
 }
 
-// Últimos `cantidad` meses (el actual primero) como { value: 'AAAA-MM', label: 'Septiembre 2026' }.
-export function opcionesMeses(cantidad = 24, hoy = new Date()) {
-  return Array.from({ length: cantidad }, (_, i) => {
-    const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
-    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    return { value, label: etiquetaMes(value) };
-  });
-}
-
-// Primer y último día del mes (AAAA-MM-DD) para el filtro de fecha contable.
-export function rangoDelMes(mes) {
-  const [anio, m] = mes.split('-').map(Number);
-  const ultimo = new Date(anio, m, 0).getDate();
-  return { fechaDesde: `${mes}-01`, fechaHasta: `${mes}-${String(ultimo).padStart(2, '0')}` };
+// 'AAAA-MM' de la fecha contable de un movimiento (en UTC, como se guarda), o null si no tiene.
+export function mesDeFecha(fecha) {
+  return fecha ? new Date(fecha).toISOString().slice(0, 7) : null;
 }
 
 const numero = (v) => {

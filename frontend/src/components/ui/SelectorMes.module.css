@@ -1,0 +1,82 @@
+.selector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+  max-width: 320px;
+  padding: var(--space-sm);
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.anio {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.anioTexto {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.flecha {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.flecha:hover:not(:disabled) {
+  background: var(--color-surface-sunken);
+}
+
+.flecha:disabled {
+  color: var(--color-border-strong);
+  cursor: not-allowed;
+}
+
+.flecha:focus-visible,
+.mes:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.meses {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.mes {
+  min-height: 38px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.mes:hover:not(:disabled):not(.mesActivo) {
+  background: var(--color-surface-sunken);
+}
+
+.mes:disabled {
+  color: var(--color-border-strong);
+  cursor: not-allowed;
+}
+
+.mesActivo {
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+}

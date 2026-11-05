@@ -23,7 +23,8 @@ import base from '../negocios/NegociosPage.module.css';
 import styles from './MovimientosPage.module.css';
 import { MovimientosTabla, formatCell, cleanNombre, shortFideicomiso } from './MovimientosTabla.jsx';
 import { Modal } from '../../components/ui/Modal.jsx';
-import { TIPO_DESISTIMIENTO, opcionesMeses, rangoDelMes, exportarInformeDesistidosExcel, exportarInformeDesistidosPdf } from './informeDesistidos.js';
+import { SelectorMes } from '../../components/ui/SelectorMes.jsx';
+import { TIPO_DESISTIMIENTO, etiquetaMes, mesDeFecha, exportarInformeDesistidosExcel, exportarInformeDesistidosPdf } from './informeDesistidos.js';
 
 function useDebounce(value, delay = 350) {
   const [debounced, setDebounced] = useState(value);
@@ -41,24 +42,44 @@ const PRESETS = [
   { label: 'Último año', months: 12 },
 ];
 
-// Ventana del informe mensual de desistidos: elige el mes y el formato; baja solo los movimientos DESISTIMIENTOS de ese mes.
+// Ventana del informe mensual de desistidos: elige el mes (solo los que tienen desistidos) y el formato; baja solo los
+// movimientos DESISTIMIENTOS de ese mes. Trae todos los desistimientos una vez al abrirse, para saber qué meses tienen
+// datos y cuántos movimientos y negocios tiene cada uno.
 function ModalInformeDesistidos({ open, onClose }) {
-  const meses = opcionesMeses();
-  const [mes, setMes] = useState(meses[1].value); // por defecto el mes anterior (el informe es mensual)
+  const [porMes, setPorMes] = useState(null); // Map 'AAAA-MM' -> { movimientos: [...], negocios: n }
+  const [errorCarga, setErrorCarga] = useState(null);
+  const [mes, setMes] = useState(null);
   const [formato, setFormato] = useState('xlsx');
   const [generando, setGenerando] = useState(false);
 
+  useEffect(() => {
+    if (!open || porMes) return;
+    setErrorCarga(null);
+    exportMovimientosNegocios({ tipoMovimiento: [TIPO_DESISTIMIENTO] })
+      .then((res) => {
+        const mapa = new Map();
+        for (const mov of res.data?.data || []) {
+          const m = mesDeFecha(mov.fechaContable);
+          if (!m) continue;
+          if (!mapa.has(m)) mapa.set(m, { movimientos: [], negocios: new Set() });
+          const entrada = mapa.get(m);
+          entrada.movimientos.push(mov);
+          entrada.negocios.add(mov.negocio?.enlaceId ?? `mov-${mov.id}`);
+        }
+        setPorMes(mapa);
+        setMes([...mapa.keys()].sort().pop() ?? null); // por defecto, el último mes con desistidos
+      })
+      .catch((err) => setErrorCarga(err.message));
+  }, [open, porMes]);
+
+  const seleccionado = mes && porMes?.get(mes);
+
   async function generar() {
+    if (!seleccionado) return;
     setGenerando(true);
     try {
-      const res = await exportMovimientosNegocios({ tipoMovimiento: [TIPO_DESISTIMIENTO], ...rangoDelMes(mes) });
-      const movimientos = res.data?.data || [];
-      if (movimientos.length === 0) {
-        window.alert('No hay movimientos desistidos en ese mes.');
-        return;
-      }
-      if (formato === 'xlsx') await exportarInformeDesistidosExcel({ mes, movimientos });
-      else exportarInformeDesistidosPdf({ mes, movimientos });
+      if (formato === 'xlsx') await exportarInformeDesistidosExcel({ mes, movimientos: seleccionado.movimientos });
+      else exportarInformeDesistidosPdf({ mes, movimientos: seleccionado.movimientos });
       onClose();
     } catch (err) {
       window.alert(`Error al generar el informe de desistidos: ${err.message}`);
@@ -75,26 +96,35 @@ function ModalInformeDesistidos({ open, onClose }) {
       footer={(
         <>
           <Button variant="secondary" onClick={onClose} disabled={generando}>Cancelar</Button>
-          <Button onClick={generar} disabled={generando}>{generando ? 'Generando…' : 'Generar'}</Button>
+          <Button onClick={generar} disabled={generando || !seleccionado}>{generando ? 'Generando…' : 'Generar'}</Button>
         </>
       )}
     >
       <div className={styles.informeCampos}>
-        <Field label="Mes">
-          {(p) => (
-            <Select {...p} value={mes} onChange={(e) => setMes(e.target.value)} disabled={generando}>
-              {meses.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-            </Select>
-          )}
-        </Field>
-        <fieldset className={styles.informeFormato}>
-          <legend>Formato</legend>
-          <label><input type="radio" name="formato-desistidos" checked={formato === 'xlsx'} onChange={() => setFormato('xlsx')} disabled={generando} /> Excel</label>
-          <label><input type="radio" name="formato-desistidos" checked={formato === 'pdf'} onChange={() => setFormato('pdf')} disabled={generando} /> PDF</label>
-        </fieldset>
-        <p className={styles.informeNota}>
-          Solo movimientos de desistimiento con fecha contable en ese mes. El Excel trae un resumen por negocio (aportes devueltos, GMF y penalidades) y el detalle de cada movimiento; el PDF, el resumen.
-        </p>
+        {errorCarga && <p className={styles.informeNota} role="alert">No se pudieron cargar los desistidos: {errorCarga}</p>}
+        {!errorCarga && !porMes && <p className={styles.informeNota}>Cargando meses con desistidos…</p>}
+        {porMes && porMes.size === 0 && <p className={styles.informeNota}>Todavía no hay movimientos de desistimiento.</p>}
+        {porMes && porMes.size > 0 && (
+          <>
+            <div className={styles.informeMes}>
+              <span className={styles.informeEtiqueta}>Mes</span>
+              <SelectorMes value={mes} onChange={setMes} disponibles={new Set(porMes.keys())} />
+              <span className={styles.informeResumenMes}>
+                {seleccionado
+                  ? `${etiquetaMes(mes)} · ${seleccionado.movimientos.length} movimientos, ${seleccionado.negocios.size} negocios`
+                  : 'Elige un mes (los meses sin desistidos están deshabilitados).'}
+              </span>
+            </div>
+            <fieldset className={styles.informeFormato}>
+              <legend>Formato</legend>
+              <label><input type="radio" name="formato-desistidos" checked={formato === 'xlsx'} onChange={() => setFormato('xlsx')} disabled={generando} /> Excel</label>
+              <label><input type="radio" name="formato-desistidos" checked={formato === 'pdf'} onChange={() => setFormato('pdf')} disabled={generando} /> PDF</label>
+            </fieldset>
+            <p className={styles.informeNota}>
+              Solo movimientos de desistimiento con fecha contable en ese mes. El Excel trae un resumen por negocio (aportes devueltos, GMF y penalidades) y el detalle de cada movimiento; el PDF, el resumen.
+            </p>
+          </>
+        )}
       </div>
     </Modal>
   );

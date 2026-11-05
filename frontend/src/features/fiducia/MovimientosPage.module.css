@@ -180,7 +180,24 @@ a.referencia:hover {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  min-width: min(380px, 80vw);
+  min-width: min(340px, 80vw);
+}
+
+.informeMes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.informeEtiqueta {
+  font-size: var(--text-label-size);
+  font-weight: 600;
+  color: var(--color-ink-muted);
+}
+
+.informeResumenMes {
+  font-size: var(--text-data-size);
+  color: var(--color-ink);
 }
 
 .informeFormato {

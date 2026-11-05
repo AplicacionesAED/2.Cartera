@@ -643,13 +643,12 @@ export function ResumenPage() {
             <p className={styles.consolidadoSubtitulo}>Cifras en miles de millones de pesos (COP). Pasa el cursor sobre ⓘ para ver cómo se calcula cada columna.</p>
           </div>
           <div className={styles.consolidadoControles}>
-            <Field className={styles.fieldMesSm} label="Mes">
-              {(p) => (
-                <Select {...p} value={mes} onChange={(e) => setMes(e.target.value)}>
-                  {meses.map((m) => <option key={m.mes} value={m.mes}>{m.etiqueta}</option>)}
-                </Select>
-              )}
-            </Field>
+            <div className={styles.selectorMes}>
+              <label className={styles.selectorMesEtiqueta} htmlFor="consolidado-mes">Mes</label>
+              <Select id="consolidado-mes" value={mes} onChange={(e) => setMes(e.target.value)}>
+                {meses.map((m) => <option key={m.mes} value={m.mes}>{m.etiqueta}</option>)}
+              </Select>
+            </div>
             {datos?.enVivo && <Badge variant="info">En vivo</Badge>}
             <SyncModoButton
               opciones={FORMATOS_EXPORTAR_CONSOLIDADO}

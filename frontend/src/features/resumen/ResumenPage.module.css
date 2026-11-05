@@ -213,10 +213,6 @@
   margin: 0;
 }
 
-.fieldMesSm {
-  width: 220px;
-}
-
 .avisoMeses {
   font-size: var(--text-label-size);
   font-style: italic;
@@ -242,7 +238,7 @@
 .consolidadoCabecera {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
 }
@@ -256,8 +252,25 @@
 .consolidadoControles {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--space-md);
+}
+
+/* Mes: etiqueta a la izquierda del selector (no encima), para que quede en la misma línea que "En vivo" y Exportar. */
+.selectorMes {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.selectorMesEtiqueta {
+  font-size: var(--text-label-size);
+  font-weight: 600;
+  color: var(--color-ink-muted);
+}
+
+.selectorMes select {
+  width: 190px;
 }
 
 .consolidadoWrap {

@@ -12,7 +12,7 @@
 // `propiedades` (JSONB) y se promueven a columna real solo las propiedades
 // que ya sabemos que importan.
 const sequelize = require('../../../config/db');
-const { listarPropiedades, buscarDeals, listarPipelines, listarAsociaciones } = require('../../../utils/hubspotClient');
+const { listarPropiedades, buscarDeals, listarPipelines, listarAsociaciones, leerObjeto, leerPropiedad } = require('../../../utils/hubspotClient');
 const { invalidarCacheResumenOliv } = require('../olivResumen/olivResumenCache');
 const { ETAPA_MINIMA_ORDER } = require('../../../utils/olivHelpers');
 const OlivPropiedadMetadata = require('./olivPropiedadMetadata.model');
@@ -145,6 +145,37 @@ async function fetchInmuebleHubspotId(dealId) {
   }
 }
 
+// Datos de la persona (el Contacto asociado al deal) que se guardan dentro de `propiedades.contacto`: tipo y número de
+// identificación, país (el dropdown "País") y departamento de residencia. Son los que llena el contacto en el formulario
+// de vinculación a fiducia.
+const PROPIEDADES_CONTACTO = ['identification_type', 'identification_number', 'paisdropdown', 'pais_form_vinculacion', 'ciudad_form_vinculacion', 'departamento_de_colombia'];
+
+// value -> label de `departamento_de_colombia` ("la_guajira" -> "La Guajira"); se pide una vez por sync.
+async function fetchEtiquetasDepartamento() {
+  try {
+    const propiedad = await leerPropiedad('contacts', 'departamento_de_colombia');
+    return Object.fromEntries((propiedad.options || []).map((o) => [o.value, o.label]));
+  } catch (err) {
+    console.error('[oliv-sync] Error leyendo las opciones de departamento_de_colombia:', err.message); // eslint-disable-line no-console
+    return {};
+  }
+}
+
+// Solo guarda las propiedades con valor; null si el deal no tiene contacto asociado o falla la lectura (la sync sigue).
+async function fetchContactoDeal(dealId, etiquetasDepartamento) {
+  try {
+    const contactoIds = await listarAsociaciones('deals', dealId, 'contacts');
+    if (!contactoIds[0]) return null;
+    const contacto = await leerObjeto('contacts', contactoIds[0], PROPIEDADES_CONTACTO);
+    const datos = Object.fromEntries(Object.entries(contacto.properties || {}).filter(([k, v]) => PROPIEDADES_CONTACTO.includes(k) && v != null && v !== ''));
+    if (datos.departamento_de_colombia) datos.departamento_de_colombia = etiquetasDepartamento[datos.departamento_de_colombia] ?? datos.departamento_de_colombia;
+    return { id: contactoIds[0], ...datos };
+  } catch (err) {
+    console.error(`[oliv-sync] Error leyendo el contacto asociado de deal ${dealId}:`, err.message); // eslint-disable-line no-console
+    return null;
+  }
+}
+
 // Upsert en SQL crudo con bind posicionales -- mismo motivo documentado en
 // oportunidad.sync.js#upsertOportunidad: bajo lotes concurrentes
 // (Promise.all), `replacements` con nombre de Sequelize puede mezclar
@@ -239,6 +270,7 @@ async function syncOportunidadesOliv(modo = 'todo') {
     const yaNoCalifican = desde ? traidos.filter((d) => !idsElegibles.has(d.properties?.dealstage)).map((d) => String(d.id)) : [];
     console.log(`[oliv-sync] ${desde ? 'Por cambios' : 'Completo'}: ${traidos.length} deals traídos, ${deals.length} califican (etapa >= ${ETAPA_MINIMA_ORDER})`); // eslint-disable-line no-console // eslint-disable-line no-console
 
+    const etiquetasDepartamento = await fetchEtiquetasDepartamento();
     progreso.fase('Guardando oportunidades', deals.length);
     const BATCH_SIZE = 50;
     let saved = 0;
@@ -249,6 +281,8 @@ async function syncOportunidadesOliv(modo = 'todo') {
         batch.map(async (deal) => {
           const data = mapDeal(deal, stageMap);
           data.inmueble_hubspot_id = await fetchInmuebleHubspotId(deal.id);
+          const contacto = await fetchContactoDeal(deal.id, etiquetasDepartamento);
+          if (contacto) data.propiedades = { ...data.propiedades, contacto };
           await upsertOlivOportunidad(data);
         })
       );

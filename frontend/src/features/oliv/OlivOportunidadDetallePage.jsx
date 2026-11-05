@@ -192,6 +192,10 @@ export function OlivOportunidadDetallePage() {
               <InfoRow label="Teléfono">{op.telefono ? <a href={`tel:${op.telefono}`} className={styles.link}>{op.telefono}</a> : null}</InfoRow>
               <InfoRow label="Proyecto">{op.proyecto}</InfoRow>
               <InfoRow label="Referencia Recaudo">{op.referenciaRecaudo ? <span className={styles.refBadge}>{op.referenciaRecaudo}</span> : null}</InfoRow>
+              <InfoRow label="Tipo de identificación">{propiedades.contacto?.identification_type}</InfoRow>
+              <InfoRow label="Identificación">{propiedades.contacto?.identification_number}</InfoRow>
+              <InfoRow label="País de residencia">{propiedades.contacto?.paisdropdown}</InfoRow>
+              <InfoRow label="Departamento de residencia">{propiedades.contacto?.departamento_de_colombia}</InfoRow>
               <InfoRow label="Ciudad de residencia">{propiedades.ciudad_de_residencia}</InfoRow>
               <InfoRow label="País de ciudadanía">{propiedades.pais_de_ciudadania}</InfoRow>
               <InfoRow label="Nacionalidad">{propiedades.nacionalidad}</InfoRow>

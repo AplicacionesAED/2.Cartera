@@ -102,7 +102,9 @@ async function construirFilasCompletas() {
     let pendienteSaldoContraentrega = null;
     let diasAtrasoSaldoContraentrega = null;
     let tieneMovimientos = false;
+    let tipoIdentificacion = null;
     let identificacion = null;
+    let departamentoResidencia = null;
     let telefono = null;
     let email = null;
     let paisResidencia = null;
@@ -115,11 +117,14 @@ async function construirFilasCompletas() {
       tieneMovimientos = (fiducia?.movimientos.length ?? 0) > 0;
       const cotizacion = cotizacionPorOportunidadId.get(oportunidad.id) ?? null;
       // Datos del comprador y desglose de la cotización para la tabla de Cartera en Gestión.
-      identificacion = fiducia?.identificacion || cotizacion?.contactoSnapshot?.cedula || null;
+      // Datos de la persona: los que el sync guardó en `propiedades.contacto` (formulario de vinculación a fiducia).
+      const contacto = oportunidad.propiedades?.contacto;
+      tipoIdentificacion = contacto?.identification_type || null;
+      identificacion = contacto?.identification_number || fiducia?.identificacion || cotizacion?.contactoSnapshot?.cedula || null;
       telefono = oportunidad.telefono || cotizacion?.contactoSnapshot?.telefono || null;
       email = oportunidad.email || cotizacion?.contactoSnapshot?.email || null;
-      // HubSpot no tiene "país de residencia": lo más cercano es el país de ciudadanía.
-      paisResidencia = oportunidad.propiedades?.pais_de_ciudadania || null;
+      paisResidencia = contacto?.paisdropdown || oportunidad.propiedades?.pais_de_ciudadania || null;
+      departamentoResidencia = contacto?.departamento_de_colombia || null;
       valorApartamento = cotizacion?.informacionFinanciera?.valorApartamento ?? null;
       valorParqueadero = cotizacion?.informacionFinanciera?.valorParqueadero ?? null;
       const conciliacion = conciliacionAproximada(cotizacion, fiducia);
@@ -215,10 +220,12 @@ async function construirFilasCompletas() {
       valorM2Hubspot: inmueble?.valor_m2 != null && !Number.isNaN(Number(inmueble.valor_m2)) ? Number(inmueble.valor_m2) : null,
       area: inmueble?.area_construida != null && !Number.isNaN(Number(inmueble.area_construida)) ? Number(inmueble.area_construida) : null, // área CONSTRUIDA (antes tomaba la privada)
       fechaContrato: diaBogota(oportunidad?.propiedades?.[`hs_v2_date_entered_${ETAPA_8_STAGE_ID}`]),
+      tipoIdentificacion,
       identificacion,
       telefono,
       email,
       paisResidencia,
+      departamentoResidencia,
       valorApartamento,
       valorParqueadero,
       _tieneMovimientos: tieneMovimientos,
@@ -442,7 +449,7 @@ const CAMPOS_ORDENABLES_MORA = new Set([
   'fechaSaldoContraentrega',
   // Informe de Cartera
   'vista', 'area', 'fechaContrato', 'valorM2', 'valorCuotaInicial', 'credito', 'totalAbonado', 'pctRecaudo',
-  'identificacion', 'telefono', 'email', 'paisResidencia', 'valorApartamento', 'valorParqueadero', 'porRecibir',
+  'tipoIdentificacion', 'identificacion', 'telefono', 'email', 'paisResidencia', 'departamentoResidencia', 'valorApartamento', 'valorParqueadero', 'porRecibir',
 ]);
 const CAMPOS_NUMERICOS_MORA = new Set([
   'valorInmueble', 'cuotasEnMora', 'maxDiasAtraso', 'montoEnMora', 'pctEnMora',

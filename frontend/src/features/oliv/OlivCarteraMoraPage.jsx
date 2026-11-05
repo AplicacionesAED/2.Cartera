@@ -397,10 +397,10 @@ export function OlivCarteraMoraPage() {
                           <th aria-sort={ariaSort(sort, 'unidad')}><SortHeader label="Nomenclatura" sortKey="unidad" sort={sort} onSort={toggleSort} /></th>
                           <th aria-sort={ariaSort(sort, 'area')}><SortHeader label="Área (m²)" sortKey="area" sort={sort} onSort={toggleSort} align="center" /></th>
                           <th aria-sort={ariaSort(sort, 'comprador')}><SortHeader label="Comprador" sortKey="comprador" sort={sort} onSort={toggleSort} /></th>
-                          <th>Tipo de identificación</th>
+                          <th aria-sort={ariaSort(sort, 'tipoIdentificacion')}><SortHeader label="Tipo de identificación" sortKey="tipoIdentificacion" sort={sort} onSort={toggleSort} /></th>
                           <th aria-sort={ariaSort(sort, 'identificacion')}><SortHeader label="Identificación" sortKey="identificacion" sort={sort} onSort={toggleSort} /></th>
                           <th aria-sort={ariaSort(sort, 'paisResidencia')}><SortHeader label="País de residencia" sortKey="paisResidencia" sort={sort} onSort={toggleSort} /></th>
-                          <th>Departamento de residencia</th>
+                          <th aria-sort={ariaSort(sort, 'departamentoResidencia')}><SortHeader label="Departamento de residencia" sortKey="departamentoResidencia" sort={sort} onSort={toggleSort} /></th>
                           <th aria-sort={ariaSort(sort, 'telefono')}><SortHeader label="Teléfono" sortKey="telefono" sort={sort} onSort={toggleSort} /></th>
                           <th aria-sort={ariaSort(sort, 'email')}><SortHeader label="Correo electrónico" sortKey="email" sort={sort} onSort={toggleSort} /></th>
                           <th aria-sort={ariaSort(sort, 'valorInmueble')}><SortHeader label="Valor total del negocio" sortKey="valorInmueble" sort={sort} onSort={toggleSort} align="center" /></th>

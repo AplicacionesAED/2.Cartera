@@ -97,4 +97,14 @@ async function listarAsociaciones(objectType, objectId, toObjectType) {
   return (data.results || []).map((r) => String(r.toObjectId));
 }
 
-module.exports = { tokenConfigurado, hubspotGet, hubspotPost, hubspotPatch, listarPropiedades, buscarObjeto, buscarDeals, listarPipelines, listarAsociaciones, actualizarPropiedadesObjeto };
+// Un objeto puntual (ej. un Contacto) con solo las propiedades pedidas.
+async function leerObjeto(objectType, objectId, properties = []) {
+  return hubspotGet(`/crm/v3/objects/${objectType}/${objectId}`, { properties: properties.join(',') });
+}
+
+// Definición de UNA propiedad (con las opciones si es de lista).
+async function leerPropiedad(objectType, propertyName) {
+  return hubspotGet(`/crm/v3/properties/${objectType}/${propertyName}`);
+}
+
+module.exports = { tokenConfigurado, hubspotGet, hubspotPost, hubspotPatch, listarPropiedades, buscarObjeto, buscarDeals, listarPipelines, listarAsociaciones, actualizarPropiedadesObjeto, leerObjeto, leerPropiedad };

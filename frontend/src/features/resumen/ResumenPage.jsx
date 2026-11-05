@@ -32,10 +32,9 @@ import { Button } from '../../components/ui/Button.jsx';
 import { SyncModoButton, FORMATOS_EXPORTAR_CONSOLIDADO } from '../../components/SyncModoButton.jsx';
 import { Badge } from '../../components/ui/Badge.jsx';
 import { InfoTooltip } from '../../components/ui/InfoTooltip.jsx';
-import { useAuth } from '../../auth/AuthContext.jsx';
 import { useEstadoRetorno } from '../../hooks/useEstadoRetorno.js';
 import { useModoEnfocado } from '../../hooks/useModoEnfocado.js';
-import { getMesesResumen, getResumenEtapas, cerrarMesAnterior, getDashboardRecaudo, getResumenStats } from '../../api/dashboard.js';
+import { getMesesResumen, getResumenEtapas, getDashboardRecaudo, getResumenStats } from '../../api/dashboard.js';
 import { getSyncLogsOportunidades } from '../../api/oportunidades.js';
 import { etiquetaEtapa, compararEtapas } from '../../utils/etapas.js';
 import { formatDateTime } from '../../utils/format.js';
@@ -252,14 +251,12 @@ function ConsolidadoCarteraEtapa({ data }) {
 const pctRecaudo = (recaudado, totalidad) => (totalidad > 0 ? (recaudado / totalidad) * 100 : null);
 
 export function ResumenPage() {
-  const { usuario } = useAuth();
 
   // Consolidado de Cartera por Etapa (navegable mes a mes)
   const [meses, setMeses] = useState([]);
   const [mes, setMes] = useEstadoRetorno('resumen:mes', '');
   const [datos, setDatos] = useState(null);
   const [error, setError] = useState(null);
-  const [cerrando, setCerrando] = useState(false);
   const [exportandoPdf, setExportandoPdf] = useState(false);
   const [exportandoExcel, setExportandoExcel] = useState(false);
   const [formatoExport, setFormatoExport] = useState('xlsx');
@@ -435,19 +432,6 @@ export function ResumenPage() {
 
   const formatLabelTendencia = granularidadTendencia === 'dia' || granularidadTendencia === 'quincena' ? fmtDia : fmtMes;
 
-  async function handleCerrarMes() {
-    setCerrando(true);
-    try {
-      await cerrarMesAnterior();
-      const res = await getMesesResumen();
-      setMeses(res.data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setCerrando(false);
-    }
-  }
-
   // PDF horizontal del consolidado del mes que se está viendo (nombre: mes del consolidado + fecha de exportación).
   async function handleExportConsolidadoPdf() {
     if (!datos) return;
@@ -484,11 +468,6 @@ export function ResumenPage() {
         <div className={dashStyles.headerText}>
           <h1 className={dashStyles.title}>Resumen Gerencial</h1>
           <p className={dashStyles.subtitle}>Cartera de cobranza.</p>
-        </div>
-        <div className={dashStyles.headerActions}>
-          {usuario?.esAdmin && (
-            <Button variant="secondary" onClick={handleCerrarMes} disabled={cerrando}>{cerrando ? 'Cerrando…' : 'Cerrar mes anterior'}</Button>
-          )}
         </div>
       </div>
 

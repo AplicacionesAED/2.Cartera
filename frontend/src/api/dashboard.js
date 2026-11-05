@@ -25,6 +25,3 @@ export function getResumenEtapas(mes) {
   return client.get(`/negocios/resumen-etapas${toQuery({ mes })}`);
 }
 
-export function cerrarMesAnterior() {
-  return client.post('/negocios/resumen-etapas/cerrar-mes');
-}

@@ -28,11 +28,10 @@ import { Button } from '../../components/ui/Button.jsx';
 import { SyncModoButton, FORMATOS_EXPORTAR_CONSOLIDADO } from '../../components/SyncModoButton.jsx';
 import { Badge } from '../../components/ui/Badge.jsx';
 import { InfoTooltip } from '../../components/ui/InfoTooltip.jsx';
-import { useAuth } from '../../auth/AuthContext.jsx';
 import { useEstadoRetorno } from '../../hooks/useEstadoRetorno.js';
 import { useModoEnfocado } from '../../hooks/useModoEnfocado.js';
 import {
-  getMesesResumenOliv, getResumenTorresOliv, cerrarMesAnteriorOliv,
+  getMesesResumenOliv, getResumenTorresOliv,
   getDashboardRecaudoOliv, getResumenStatsOliv,
 } from '../../api/olivResumen.js';
 import { getSyncStatusOportunidadesOliv } from '../../api/oliv.js';
@@ -241,14 +240,12 @@ function ConsolidadoCarteraTorre({ data }) {
 const pctRecaudo = (recaudado, totalidad) => (totalidad > 0 ? (recaudado / totalidad) * 100 : null);
 
 export function OlivResumenPage() {
-  const { usuario } = useAuth();
 
   // Consolidado de Cartera por Torre (navegable mes a mes)
   const [meses, setMeses] = useState([]);
   const [mes, setMes] = useEstadoRetorno('oliv-resumen:mes', '');
   const [datos, setDatos] = useState(null);
   const [error, setError] = useState(null);
-  const [cerrando, setCerrando] = useState(false);
   const [exportandoConsolidado, setExportandoConsolidado] = useState(false);
   const [formatoExport, setFormatoExport] = useState('xlsx');
   const [exportandoPdf, setExportandoPdf] = useState(false);
@@ -416,19 +413,6 @@ export function OlivResumenPage() {
   const labelVentana = rangoTendencia === 'anio' ? `Año ${anioSeleccionado}` : (RANGOS_TENDENCIA.find((r) => r.key === rangoTendencia)?.label ?? '');
   const formatLabelTendencia = granularidadTendencia === 'dia' || granularidadTendencia === 'quincena' ? fmtDia : fmtMes;
 
-  async function handleCerrarMes() {
-    setCerrando(true);
-    try {
-      await cerrarMesAnteriorOliv();
-      const res = await getMesesResumenOliv();
-      setMeses(res.data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setCerrando(false);
-    }
-  }
-
   // PDF horizontal del consolidado por torre del mes que se está viendo (mismo formato que el de Baía Kristal).
   async function handleExportConsolidadoPdf() {
     if (!datos) return;
@@ -540,11 +524,6 @@ export function OlivResumenPage() {
         <div className={dashStyles.headerText}>
           <h1 className={dashStyles.title}>Resumen Gerencial</h1>
           <p className={dashStyles.subtitle}>Oliv · Cartera de cobranza.</p>
-        </div>
-        <div className={dashStyles.headerActions}>
-          {usuario?.esAdmin && (
-            <Button variant="secondary" onClick={handleCerrarMes} disabled={cerrando}>{cerrando ? 'Cerrando…' : 'Cerrar mes anterior'}</Button>
-          )}
         </div>
       </div>
 

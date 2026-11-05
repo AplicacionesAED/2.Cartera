@@ -20,10 +20,6 @@ export function getResumenTorresOliv(mes) {
   return client.get(`/oliv/resumen/resumen-torres${toQuery({ mes })}`);
 }
 
-export function cerrarMesAnteriorOliv() {
-  return client.post('/oliv/resumen/resumen-torres/cerrar-mes');
-}
-
 export function getCarteraMoraOliv(params) {
   return client.get(`/oliv/resumen/cartera-mora${toQuery(params)}`);
 }

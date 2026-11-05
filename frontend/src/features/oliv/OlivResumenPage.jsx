@@ -621,6 +621,38 @@ export function OlivResumenPage() {
         ]}
       />
 
+      {/* Consolidado de Cartera por Torre */}
+      <div className={styles.consolidadoCard}>
+        <h2 className={styles.consolidadoTitulo}>
+          Consolidado de Cartera por Torre
+          <InfoTooltip text="Equivalente Oliv del Excel 'CONSOLIDADO DE CARTERA' de Baía Kristal, agrupado por Torre en vez de por Etapa constructiva." />
+        </h2>
+        <div className={styles.consolidadoControles}>
+          <div className={styles.selectorMes}>
+            <label className={styles.selectorMesEtiqueta} htmlFor="consolidado-mes">Mes</label>
+            <CampoMes
+              id="consolidado-mes"
+              value={mes}
+              onChange={setMes}
+              disponibles={new Set(meses.map((m) => m.mes))}
+              etiqueta={(v) => meses.find((m) => m.mes === v)?.etiqueta ?? etiquetaMesLarga(v)}
+            />
+          </div>
+          {datos?.enVivo && <Badge variant="info">En vivo</Badge>}
+          <SyncModoButton
+            opciones={FORMATOS_EXPORTAR_CONSOLIDADO}
+            modo={formatoExport}
+            onModo={setFormatoExport}
+            onEjecutar={(fmt) => (fmt === 'xlsx' ? handleExportConsolidado() : handleExportConsolidadoPdf())}
+            disabled={!datos || exportandoConsolidado || exportandoPdf}
+            Icono={Download}
+            ariaLabelFlecha="Elegir formato de exportación"
+          />
+        </div>
+        <ConsolidadoCarteraTorre data={datos} />
+        {meses.length <= 1 && <p className={styles.avisoMeses}>Todavía no hay meses cerrados para navegar -- se va a ir guardando una foto automáticamente al cierre de cada mes.</p>}
+      </div>
+
       {/* Tendencia: plan de pagos vs. recaudo real */}
       <div className={enfocado ? styles.tendenciaEnfocada : styles.tendenciaCard}>
         <div className={styles.tendenciaHeader}>
@@ -672,38 +704,6 @@ export function OlivResumenPage() {
           vista={vistaLinea}
           fill={enfocado}
         />
-      </div>
-
-      {/* Consolidado de Cartera por Torre */}
-      <div className={styles.consolidadoCard}>
-        <h2 className={styles.consolidadoTitulo}>
-          Consolidado de Cartera por Torre
-          <InfoTooltip text="Equivalente Oliv del Excel 'CONSOLIDADO DE CARTERA' de Baía Kristal, agrupado por Torre en vez de por Etapa constructiva." />
-        </h2>
-        <div className={styles.consolidadoControles}>
-          <div className={styles.selectorMes}>
-            <label className={styles.selectorMesEtiqueta} htmlFor="consolidado-mes">Mes</label>
-            <CampoMes
-              id="consolidado-mes"
-              value={mes}
-              onChange={setMes}
-              disponibles={new Set(meses.map((m) => m.mes))}
-              etiqueta={(v) => meses.find((m) => m.mes === v)?.etiqueta ?? etiquetaMesLarga(v)}
-            />
-          </div>
-          {datos?.enVivo && <Badge variant="info">En vivo</Badge>}
-          <SyncModoButton
-            opciones={FORMATOS_EXPORTAR_CONSOLIDADO}
-            modo={formatoExport}
-            onModo={setFormatoExport}
-            onEjecutar={(fmt) => (fmt === 'xlsx' ? handleExportConsolidado() : handleExportConsolidadoPdf())}
-            disabled={!datos || exportandoConsolidado || exportandoPdf}
-            Icono={Download}
-            ariaLabelFlecha="Elegir formato de exportación"
-          />
-        </div>
-        <ConsolidadoCarteraTorre data={datos} />
-        {meses.length <= 1 && <p className={styles.avisoMeses}>Todavía no hay meses cerrados para navegar -- se va a ir guardando una foto automáticamente al cierre de cada mes.</p>}
       </div>
 
       {/* Recaudo por Torre (colapsable) */}

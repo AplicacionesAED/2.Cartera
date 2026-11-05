@@ -553,6 +553,43 @@ export function ResumenPage() {
         ]}
       />
 
+      {/* Consolidado de Cartera por Etapa */}
+      <div className={styles.consolidadoCard}>
+        <div className={styles.consolidadoCabecera}>
+          <div>
+            <h2 className={styles.consolidadoTitulo}>
+              Consolidado de Cartera por Etapa
+              <InfoTooltip text="Réplica en vivo del Excel “CONSOLIDADO DE CARTERA” que Gerencia arma cada mes. Las unidades y el precio de las disponibles salen del inventario de Zoho; las ventas, cuotas iniciales y pagos, de la fiducia; y la cartera, del plan de pagos de Zoho." />
+            </h2>
+            <p className={styles.consolidadoSubtitulo}>Cifras en miles de millones de pesos (COP). Pasa el cursor sobre ⓘ para ver cómo se calcula cada columna. No cambia con los filtros de ubicación ni de periodo: se elige su mes aquí.</p>
+          </div>
+          <div className={styles.consolidadoControles}>
+            <div className={styles.selectorMes}>
+              <label className={styles.selectorMesEtiqueta} htmlFor="consolidado-mes">Mes</label>
+              <CampoMes
+                id="consolidado-mes"
+                value={mes}
+                onChange={setMes}
+                disponibles={new Set(meses.map((m) => m.mes))}
+                etiqueta={(v) => meses.find((m) => m.mes === v)?.etiqueta ?? etiquetaMesLarga(v)}
+              />
+            </div>
+            {datos?.enVivo && <Badge variant="info">En vivo</Badge>}
+            <SyncModoButton
+              opciones={FORMATOS_EXPORTAR_CONSOLIDADO}
+              modo={formatoExport}
+              onModo={setFormatoExport}
+              onEjecutar={(fmt) => (fmt === 'xlsx' ? handleExportConsolidadoExcel() : handleExportConsolidadoPdf())}
+              disabled={!datos || exportandoExcel || exportandoPdf}
+              Icono={Download}
+              ariaLabelFlecha="Elegir formato de exportación"
+            />
+          </div>
+        </div>
+        <ConsolidadoCarteraEtapa data={datos} />
+        {meses.length <= 1 && <p className={styles.avisoMeses}>Todavía no hay meses cerrados para navegar -- se va a ir guardando una foto automáticamente al cierre de cada mes.</p>}
+      </div>
+
       {/* Tendencia: plan de pagos vs. recaudo real */}
       <div className={enfocado ? styles.tendenciaEnfocada : styles.tendenciaCard}>
         <div className={styles.tendenciaHeader}>
@@ -619,43 +656,6 @@ export function ResumenPage() {
           vista={vistaLinea}
           fill={enfocado}
         />
-      </div>
-
-      {/* Consolidado de Cartera por Etapa */}
-      <div className={styles.consolidadoCard}>
-        <div className={styles.consolidadoCabecera}>
-          <div>
-            <h2 className={styles.consolidadoTitulo}>
-              Consolidado de Cartera por Etapa
-              <InfoTooltip text="Réplica en vivo del Excel “CONSOLIDADO DE CARTERA” que Gerencia arma cada mes. Las unidades y el precio de las disponibles salen del inventario de Zoho; las ventas, cuotas iniciales y pagos, de la fiducia; y la cartera, del plan de pagos de Zoho." />
-            </h2>
-            <p className={styles.consolidadoSubtitulo}>Cifras en miles de millones de pesos (COP). Pasa el cursor sobre ⓘ para ver cómo se calcula cada columna. No cambia con los filtros de ubicación ni de periodo: se elige su mes aquí.</p>
-          </div>
-          <div className={styles.consolidadoControles}>
-            <div className={styles.selectorMes}>
-              <label className={styles.selectorMesEtiqueta} htmlFor="consolidado-mes">Mes</label>
-              <CampoMes
-                id="consolidado-mes"
-                value={mes}
-                onChange={setMes}
-                disponibles={new Set(meses.map((m) => m.mes))}
-                etiqueta={(v) => meses.find((m) => m.mes === v)?.etiqueta ?? etiquetaMesLarga(v)}
-              />
-            </div>
-            {datos?.enVivo && <Badge variant="info">En vivo</Badge>}
-            <SyncModoButton
-              opciones={FORMATOS_EXPORTAR_CONSOLIDADO}
-              modo={formatoExport}
-              onModo={setFormatoExport}
-              onEjecutar={(fmt) => (fmt === 'xlsx' ? handleExportConsolidadoExcel() : handleExportConsolidadoPdf())}
-              disabled={!datos || exportandoExcel || exportandoPdf}
-              Icono={Download}
-              ariaLabelFlecha="Elegir formato de exportación"
-            />
-          </div>
-        </div>
-        <ConsolidadoCarteraEtapa data={datos} />
-        {meses.length <= 1 && <p className={styles.avisoMeses}>Todavía no hay meses cerrados para navegar -- se va a ir guardando una foto automáticamente al cierre de cada mes.</p>}
       </div>
 
       {/* Footer sync */}

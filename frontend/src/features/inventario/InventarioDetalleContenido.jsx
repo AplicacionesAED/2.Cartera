@@ -232,7 +232,7 @@ export function InventarioDetalleContenido({ id }) {
     ['Piso', item.piso],
     ['Categoría', item.categoria],
     ['Estado CRM', item.estado ? <EstadoInventarioBadge estado={item.estado} /> : null],
-    ['Estado fiducia', item.estadoFiducia ? <EstadoFiduciaBadge estado={item.estadoFiducia} libreSinVinculo={item.libreSinVinculo} /> : null],
+    ['Estado fiducia', item.estadoFiducia ? <EstadoFiduciaBadge estado={item.estadoFiducia} real libreSinVinculo={item.libreSinVinculo} /> : null],
   ].filter(
     ([, valor]) => valor != null && valor !== ''
   );

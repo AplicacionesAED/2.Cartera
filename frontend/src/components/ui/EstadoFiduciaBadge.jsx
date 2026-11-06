@@ -2,11 +2,13 @@
 // color (utils/estadosFiducia.js). Un LIBRE sin negocio vinculado lleva una alerta pequeña (`libreSinVinculo`): puede
 // ser un inmueble realmente libre o uno que no se logró vincular con la fiducia.
 import { TriangleAlert } from 'lucide-react';
-import { tonoEstadoFiducia } from '../../utils/estadosFiducia.js';
+import { tonoEstadoFiducia, estadoVisible } from '../../utils/estadosFiducia.js';
 
-export function EstadoFiduciaBadge({ estado, libreSinVinculo }) {
+// `real`: muestra el estado real (el detalle); sin él, los listados agrupan PROMETIDO, OPCIONADO, ESCRITURA_AUTORIZADA y VENDIDO como VENDIDO.
+export function EstadoFiduciaBadge({ estado, libreSinVinculo, real = false }) {
   if (!estado) return null;
-  const tono = tonoEstadoFiducia(estado);
+  const mostrado = real ? estado : estadoVisible(estado);
+  const tono = tonoEstadoFiducia(mostrado);
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
       <span
@@ -27,7 +29,7 @@ export function EstadoFiduciaBadge({ estado, libreSinVinculo }) {
         }}
       >
         <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: '50%', background: tono.ink }} />
-        {String(estado).replace(/_/g, ' ')}
+        {String(mostrado).replace(/_/g, ' ')}
       </span>
       {libreSinVinculo && (
         <span

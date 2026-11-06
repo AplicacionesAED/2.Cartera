@@ -17,6 +17,7 @@ const NegocioMovimiento = require('./baiaNegocioMovimiento.model');
 const { lista } = require('../../../utils/filtros');
 const { PROYECTO_TORRE_EXCLUIDOS, proyectosTorreDeFiltros, valoresProyectoTorre, compararEtapas, esFrenteSeleccionable, parseProyectoTorre, formatearProyectoTorre, obtenerEtapaTorre, parsePisoNumero, nomenclaturaCompleta, nomenclaturaCompletaSQL } = require('../baiaInventario/baiaInventarioTorres.service');
 const { elegirOportunidadVigente } = require('../../../config/estadosOportunidad');
+const { expandirEstadosFiltro, opcionesEstadoVisibles } = require('../../../config/estadosVisibles');
 const Oportunidad = require('../baiaOportunidad/baiaOportunidad.model');
 
 const { PRIORIDAD_ESTADO_SQL } = require('../baiaVinculo/baiaVinculoResolver');
@@ -97,7 +98,7 @@ async function construirFiltroCombinado({ search, estado, etapa, frente, torre, 
     if (ors.length) condiciones.push(`(${ors.join(' OR ')})`);
   }
 
-  const estados = lista(estado);
+  const estados = expandirEstadosFiltro(lista(estado));
   if (estados.length) {
     condiciones.push(`c.estado ILIKE ANY($${idx++}::text[])`);
     bind.push(estados.map((e) => `%${e}%`));
@@ -179,7 +180,7 @@ async function list({ search, estado, etapa, frente, torre, vinculacion, page = 
   return {
     data,
     total,
-    ...(estadosRaw ? { estados: estadosRaw.map((e) => e.estado).filter(Boolean) } : {}),
+    ...(estadosRaw ? { estados: opcionesEstadoVisibles(estadosRaw.map((e) => e.estado).filter(Boolean)) } : {}),
     etapasDisponibles: [...valores.porEtapa.keys(), SIN_PROYECTO].sort(compararEtapas),
     frentesDisponibles: [...valores.porFrente.keys()].filter(esFrenteSeleccionable).sort(),
     frentesPorEtapa: valores.frentesPorEtapa,

@@ -9,6 +9,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { downloadCsv } from '../../utils/exportCsv.js';
+import { estadoVisible } from '../../utils/estadosFiducia.js';
 
 function limpiarNombreComprador(nombre) {
   return String(nombre || '').replace(/^\|+\s*/, '').replace(/^\d+\s+/, '').replace(/\s*\(\d+\.?\d*%\)\s*$/, '');
@@ -38,7 +39,7 @@ function getSaldoActual(datos) {
 function buildRows(negocios) {
   return negocios.map((n) => ({
     Referencia: n.referencia ?? '',
-    Estado: n.estado ?? '',
+    Estado: estadoVisible(n.estado) ?? '',
     Fideicomiso: n.datos?.Fideicomiso ?? '',
     Nomenclatura: n.datos?.Nomenclatura ?? '',
     Área: n.datos?.Área ?? n.datos?.Area ?? '',
@@ -82,7 +83,7 @@ export function exportNegociosPdf(negocios, filename) {
     head: [['Referencia', 'Estado', 'Nomenclatura', 'Compradores', 'Cédulas', 'Total abonado', 'Mov.']],
     body: negocios.map((n) => [
       n.referencia ?? '—',
-      n.estado ?? '—',
+      estadoVisible(n.estado) ?? '—',
       n.datos?.Nomenclatura ?? '—',
       (n.compradores || []).map((c) => limpiarNombreComprador(c.nombre)).join('\n') || '—',
       (n.compradores || []).map((c) => c.nro_id ?? c.nroId ?? '').filter(Boolean).join('\n') || '—',

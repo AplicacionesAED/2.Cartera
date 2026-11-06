@@ -14,6 +14,13 @@ const NEUTRO = { bg: '#f1f5f9', ink: '#475569' };
 
 const clave = (estado) => String(estado ?? '').trim().toUpperCase().replace(/\s+/g, '_');
 
+// En los listados de Negocios e Inmuebles, PROMETIDO, OPCIONADO, ESCRITURA_AUTORIZADA y VENDIDO se ven como VENDIDO; el estado real
+// solo se muestra en el detalle.
+const COMO_VENDIDO = ['PROMETIDO', 'OPCIONADO', 'ESCRITURA_AUTORIZADA', 'VENDIDO'];
+export function estadoVisible(estado) {
+  return COMO_VENDIDO.includes(clave(estado)) ? 'VENDIDO' : estado;
+}
+
 export function tonoEstadoFiducia(estado) {
   return TONOS[clave(estado)] ?? NEUTRO;
 }

@@ -3,6 +3,7 @@
 // básicas del inmueble + TODAS las variables del Product de Zoho que existen en los inmuebles exportados
 // (agrupadas por las mismas secciones del detalle; los campos de sistema que el detalle oculta no se ofrecen).
 import { listInventario } from '../../api/inventario.js';
+import { estadoVisible } from '../../utils/estadosFiducia.js';
 import { descargarExcelColumnas, traerTodasLasPaginas } from '../../utils/exportarExcelColumnas.js';
 import {
   VARIABLES_OCULTAS, GRUPOS_ORDEN, GRUPOS_TITULOS, obtenerGrupoVariable, esVariableMoneda, etiquetaVariable,
@@ -49,7 +50,7 @@ const COLUMNAS_BASE = [
   { key: 'nombre', header: 'UNIDAD', width: 12, align: 'left', valor: (i) => i.nombre ?? '' },
   { key: 'categoria', header: 'CATEGORÍA', width: 16, align: 'left', valor: (i) => i.categoria ?? '' },
   { key: 'estado', header: 'ESTADO CRM', width: 14, align: 'center', estado: true, valor: (i) => i.estado ?? '' },
-  { key: 'estadoFiducia', header: 'ESTADO FIDUCIA', width: 22, align: 'center', estadoFiducia: true, valor: (i) => (i.estadoFiducia ?? '').replace(/_/g, ' ') },
+  { key: 'estadoFiducia', header: 'ESTADO FIDUCIA', width: 22, align: 'center', estadoFiducia: true, valor: (i) => String(estadoVisible(i.estadoFiducia) ?? '').replace(/_/g, ' ') },
   { key: 'libreSinVinculo', header: 'SIN NEGOCIO VINCULADO', width: 24, align: 'center', valor: (i) => (i.libreSinVinculo ? 'Sí' : '') },
   { key: 'referenciaRecaudo', header: 'REFERENCIA DE RECAUDO', width: 22, align: 'left', valor: (i) => i.referenciaRecaudo ?? '' },
 ];

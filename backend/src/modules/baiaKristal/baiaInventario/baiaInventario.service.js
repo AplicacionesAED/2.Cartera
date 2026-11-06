@@ -8,6 +8,7 @@ const { QueryTypes } = require('sequelize');
 const sequelize = require('../../../config/db');
 const ApiError = require('../../../utils/ApiError');
 const { lista } = require('../../../utils/filtros');
+const { expandirEstadosFiltro, opcionesEstadoVisibles } = require('../../../config/estadosVisibles');
 const { PRIORIDAD_ESTADO_SQL } = require('../baiaVinculo/baiaVinculoResolver');
 const { PROYECTO_TORRE_EXCLUIDOS, proyectosTorreDeFiltros, valoresProyectoTorre, compararEtapas, esFrenteSeleccionable } = require('./baiaInventarioTorres.service');
 
@@ -56,7 +57,7 @@ async function list({ search, proyecto, categoria, estado, estadoFiducia, etapa,
       replacements[`${campo}Lista`] = vals;
     }
   }
-  const estadosFiducia = lista(estadoFiducia);
+  const estadosFiducia = expandirEstadosFiltro(lista(estadoFiducia));
   if (estadosFiducia.length) {
     conditions.push(`${ESTADO_FIDUCIA_SQL} IN (:estadoFiduciaLista)`);
     replacements.estadoFiduciaLista = estadosFiducia;
@@ -99,7 +100,7 @@ async function list({ search, proyecto, categoria, estado, estadoFiducia, etapa,
     proyectos: proyectos ? proyectos.map((p) => p.proyecto) : undefined,
     categorias: categorias ? categorias.map((c) => c.categoria) : undefined,
     estados: estados ? estados.map((e) => e.estado) : undefined,
-    estadosFiducia: estadosFiduciaRows ? estadosFiduciaRows.map((e) => e.estado_fiducia) : undefined,
+    estadosFiducia: estadosFiduciaRows ? opcionesEstadoVisibles(estadosFiduciaRows.map((e) => e.estado_fiducia)) : undefined,
     etapasDisponibles: [...valores.porEtapa.keys()].sort(compararEtapas),
     frentesDisponibles: [...valores.porFrente.keys()].filter(esFrenteSeleccionable).sort(),
     frentesPorEtapa: valores.frentesPorEtapa,

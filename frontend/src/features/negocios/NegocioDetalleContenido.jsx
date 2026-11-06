@@ -606,7 +606,7 @@ export function NegocioDetalleContenido({ id }) {
         meta={`${negocio.totalMovimientos} movimientos`}
       >
         <HeroBadges>
-          {negocio.estado && <EstadoFiduciaBadge estado={negocio.estado} />}
+          {negocio.estado && <EstadoFiduciaBadge estado={negocio.estado} real />}
           {!negocio.tieneNegocio && <Badge variant="neutral">Sin negocio</Badge>}
           {negocio.oportunidad && (
             <HeroBoton onClick={handleExportarEstadoCuenta} disabled={exportando} title="Exportar estado de cuenta (PDF)">

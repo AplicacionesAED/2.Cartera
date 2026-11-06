@@ -18,7 +18,7 @@
 // fiducia/EncargosListPage.module.css).
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import ExcelJS from 'exceljs';
-import { Maximize2, Minimize2, MapPin, Building2, X, ChevronDown, ChevronUp, CheckCircle2, XCircle, Clock, Download } from 'lucide-react';
+import { Maximize2, Minimize2, MapPin, Building2, X, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { Field } from '../../components/ui/Field.jsx';
 import { CampoMes } from '../../components/ui/CampoMes.jsx';
 import { etiquetaMesLarga } from '../../components/ui/SelectorMes.jsx';
@@ -34,8 +34,6 @@ import {
   getMesesResumenOliv, getResumenTorresOliv,
   getDashboardRecaudoOliv, getResumenStatsOliv,
 } from '../../api/olivResumen.js';
-import { getSyncStatusOportunidadesOliv } from '../../api/oliv.js';
-import { formatDateTime } from '../../utils/format.js';
 import { EsperadoRecaudadoChart, fmtDia, fmtMes } from '../dashboard/charts/EsperadoRecaudadoChart.jsx';
 import { TorreRecaudoChart } from '../dashboard/charts/TorreRecaudoChart.jsx';
 import { KpiMatriz } from '../resumen/KpiMatriz.jsx';
@@ -257,7 +255,6 @@ export function OlivResumenPage() {
   // Plan vs. Recaudo" de Oliv, si llega a existir)
   const [planRecaudo, setPlanRecaudo] = useState(null);
   const [resumenStats, setResumenStats] = useState(null);
-  const [syncStatus, setSyncStatus] = useState(null);
   const [rangoTendencia, setRangoTendencia] = useEstadoRetorno('oliv-resumen:rango', 'total');
   const [anioSeleccionado, setAnioSeleccionado] = useState(new Date().getFullYear());
   const [filtroPorcentaje, setFiltroPorcentaje] = useEstadoRetorno('oliv-resumen:filtroPorcentaje', 'ambos');
@@ -278,7 +275,6 @@ export function OlivResumenPage() {
       setMes((prev) => (prev && res.data.some((m) => m.mes === prev) ? prev : res.data.find((m) => m.enVivo)?.mes ?? res.data[res.data.length - 1]?.mes ?? ''));
     });
     getResumenStatsOliv().then((res) => setResumenStats(res.data)).catch(() => {});
-    getSyncStatusOportunidadesOliv().then((res) => setSyncStatus(res.data)).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -734,21 +730,6 @@ export function OlivResumenPage() {
         </div>
         </>
       )}
-
-      {/* Footer sync -- Oliv solo expone el ÚLTIMO sync (GET
-          /oliv/oportunidades/sync/status), no un historial de los últimos 5
-          como Baía Kristal (GET /oportunidades/sync/logs no tiene
-          equivalente todavía). */}
-      <div className={styles.syncFooter}>
-        {syncStatus && syncStatus.status !== 'never' ? (
-          <>
-            {syncStatus.status === 'success' ? <CheckCircle2 size={14} className={styles.syncOk} /> : syncStatus.status === 'error' ? <XCircle size={14} className={styles.syncErr} /> : <Clock size={14} className={styles.syncPend} />}
-            <span>Última sync HubSpot: <strong>{formatDateTime(syncStatus.finalizadoEn)}</strong>{syncStatus.registrosSync != null ? ` · ${syncStatus.registrosSync} registros` : ''}</span>
-          </>
-        ) : (
-          <span>Sin historial de sincronización</span>
-        )}
-      </div>
     </div>
   );
 }

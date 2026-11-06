@@ -25,3 +25,23 @@ export const INFO_COLUMNAS_CARTERA_OLIV = {
   fechaSaldoContraentrega: 'Calculado: fecha de la última cuota del plan de pagos de la cotización aceptada (saldo contraentrega).',
   montoEnMora: 'Calculado: lo que falta por pagar de esa última cuota, según los pagos del Excel de Encargos de la fiducia.',
 };
+
+// Columnas de la tabla de Cartera en Gestión de Oliv, vista Cuota Inicial (mora activa): las llaves son las `sortKey`.
+export const INFO_COLUMNAS_CARTERA_OLIV_MORA = {
+  unidad: 'HubSpot, objeto Unidades: código de la unidad (ya incluye la torre).',
+  vista: 'HubSpot, objeto Unidades: tipo de vista del inmueble.',
+  referenciaRecaudo: 'HubSpot, oportunidad: referencia de recaudo (el encargo de la fiducia).',
+  area: 'HubSpot, objeto Unidades: área construida del inmueble.',
+  comprador: 'HubSpot, oportunidad: nombre del contacto, sin el prefijo del proyecto.',
+  fechaContrato: 'HubSpot, oportunidad: fecha en que entró a la Etapa 8 (Vinculación exitosa).',
+  fechaSaldoContraentrega: 'Calculado: fecha de la última cuota del plan de pagos de la cotización aceptada (el saldo final).',
+  valorInmueble: 'Calculado: suma del plan de pagos de la cotización aceptada. Incluye el parqueadero y ya trae descuentos y bono aplicados.',
+  valorM2: 'HubSpot, objeto Unidades: valor por m² del inmueble, tal cual está.',
+  valorCuotaInicial: 'Calculado: suma de las cuotas del plan de pagos de la cotización aceptada, sin la última (el saldo final).',
+  credito: 'Calculado: Valor venta − Cuota inicial. Es la última cuota del plan (saldo final).',
+  totalAbonado: 'Calculado: pagos del Excel de Encargos de la fiducia aplicados, en orden, contra el plan de pagos de la cotización aceptada.',
+  pctRecaudo: 'Calculado: Valor abonado ÷ Valor venta.',
+  cuotasEnMora: 'Calculado: cuotas de la cuota inicial con fecha anterior a hoy que no están pagadas completas.',
+  maxDiasAtraso: 'Calculado: el mayor atraso en días entre esas cuotas.',
+  montoEnMora: 'Calculado: lo que falta por pagar de esas cuotas vencidas.',
+};

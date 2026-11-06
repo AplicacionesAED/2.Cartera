@@ -71,7 +71,13 @@ async function construirFilasCompletas() {
   // Cotizaciones aceptadas: una sola llamada al endpoint de integración de
   // Centro Aplicaciones Comerciales con todos los negocios.
   const cotizacionPorOportunidadId = new Map();
-  const cotizacionesPorDeal = await centroAplicacionesDb.getCotizacionesAceptadas(oportunidades.map((op) => op.hubspot_id)).catch(() => ({}));
+  // Si esa conexión no está configurada o falla, las filas salen sin plan de pagos (y la mora en cero): se marca para avisarlo
+  // en pantalla en vez de mostrar un "sin resultados" engañoso, y esa foto no se guarda en el caché.
+  let cotizacionesDisponibles = centroAplicacionesDb.configurado();
+  const cotizacionesPorDeal = await centroAplicacionesDb.getCotizacionesAceptadas(oportunidades.map((op) => op.hubspot_id)).catch(() => {
+    cotizacionesDisponibles = false;
+    return {};
+  });
   for (const op of oportunidades) {
     const mapeada = centroAplicacionesDb.mapCotizacion(cotizacionesPorDeal[String(op.hubspot_id)]);
     if (mapeada) cotizacionPorOportunidadId.set(op.id, mapeada);
@@ -248,7 +254,7 @@ async function construirFilasCompletas() {
   const torres = [...new Set(inmuebles.map((im) => im.torre).filter(Boolean))].sort();
   const estadosInmueble = [...new Set(inmuebles.map((im) => im.estado).filter(Boolean))].sort();
 
-  return { filas, torres, estadosInmueble };
+  return { filas, torres, estadosInmueble, cotizacionesDisponibles };
 }
 
 async function obtenerCache() {
@@ -260,7 +266,7 @@ async function obtenerCache() {
   const promesa = construirFilasCompletas()
     .then((resultado) => {
       const nuevoCache = { ...resultado, builtAt: Date.now() };
-      setCache(nuevoCache);
+      if (resultado.cotizacionesDisponibles) setCache(nuevoCache);
       setEnConstruccion(null);
       return nuevoCache;
     })
@@ -482,7 +488,7 @@ function ordenarCarteraMora(filas, sortBy, sortDir) {
 // negocio -- se omite el filtro/las acciones de trámite/canje del todo, en
 // vez de simularlas sin poder guardarlas de verdad.
 async function obtenerCarteraMora({ search, torre, estadoInmueble, rango, vista, sortBy, sortDir, page, limit }) {
-  const { filas: todasLasFilas, torres, estadosInmueble } = await obtenerCache();
+  const { filas: todasLasFilas, torres, estadosInmueble, cotizacionesDisponibles } = await obtenerCache();
 
   const conteos = {
     inicial: todasLasFilas.filter((f) => f.cuotasEnMoraInicial > 0).length,
@@ -558,6 +564,7 @@ async function obtenerCarteraMora({ search, torre, estadoInmueble, rango, vista,
     pagination: { total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) },
     torresDisponibles: torres,
     estadosInmuebleDisponibles: estadosInmueble,
+    cotizacionesDisponibles,
   };
 }
 

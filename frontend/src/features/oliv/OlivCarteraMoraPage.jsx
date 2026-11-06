@@ -286,6 +286,7 @@ export function OlivCarteraMoraPage() {
       />
 
       {error && <div className={dashStyles.formError}>{error}</div>}
+      {resultado && resultado.cotizacionesDisponibles === false && <div className={dashStyles.formError}>No se pudo leer el plan de pagos de las cotizaciones (Centro de Aplicaciones Comerciales). Sin ese plan no se calcula la mora y esta tabla sale vacía. Revisa que esa aplicación esté en línea y vuelve a cargar.</div>}
 
       {!resultado ? (
         <p className={dashStyles.loadingState}>Cargando…</p>

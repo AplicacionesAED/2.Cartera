@@ -2,11 +2,13 @@
 // 20 columnas y el mismo cálculo que la pantalla Cartera en Gestión (GET /oliv/resumen/cartera-mora), filtrada por la Torre y
 // el Estado del inmueble de la barra del Resumen. Clic en una fila abre el negocio.
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Download } from 'lucide-react';
+import { Button } from '../../components/ui/Button.jsx';
 import { Pagination } from '../../components/ui/Pagination.jsx';
 import { InfoTooltip } from '../../components/ui/InfoTooltip.jsx';
 import { getCarteraMoraOliv } from '../../api/olivResumen.js';
+import { descargarCarteraOliv } from './exportarCarteraOliv.js';
 import { EncabezadoCarteraOlivInicial, FilaCarteraOlivInicial, COLUMNAS_CARTERA_OLIV_INICIAL } from './TablaCarteraOliv.jsx';
 import dashStyles from '../dashboard/Dashboard.module.css';
 import carteraStyles from '../cartera-mora/CarteraMoraPage.module.css';
@@ -21,6 +23,7 @@ export function SeccionCarteraOliv({ torre, estadoInmueble }) {
   const [error, setError] = useState(null);
   const [pagina, setPagina] = useState(1);
   const [sort, setSort] = useState({ key: null, direction: null });
+  const [exportando, setExportando] = useState(false);
   const ultimaPeticion = useRef(0);
 
   // Cambiar un filtro vuelve a la primera página.
@@ -57,6 +60,27 @@ export function SeccionCarteraOliv({ torre, estadoInmueble }) {
     setPagina(1);
   }
 
+  // Excel con TODAS las filas que cumplen los filtros y el orden actuales (no solo la página que se ve).
+  async function exportar() {
+    setExportando(true);
+    try {
+      const res = await getCarteraMoraOliv({
+        vista: 'inicial',
+        torre: torre?.length ? torre : undefined,
+        estadoInmueble: estadoInmueble?.length ? estadoInmueble : undefined,
+        sortBy: sort.key ?? undefined,
+        sortDir: sort.direction ?? undefined,
+        page: 1,
+        limit: 9999,
+      });
+      await descargarCarteraOliv(res.data.data, `oliv-cartera-en-gestion-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setExportando(false);
+    }
+  }
+
   // Clic en la fila abre el negocio, salvo que sea sobre un enlace o que se esté seleccionando texto.
   function abrirFila(e, fila) {
     if (e.target.closest('a, button, input, select')) return;
@@ -73,17 +97,20 @@ export function SeccionCarteraOliv({ torre, estadoInmueble }) {
         <div>
           <h2 className={styles.consolidadoTitulo}>
             Cartera en gestión — Cuota inicial
-            <InfoTooltip text="Negocios con cuotas atrasadas de la Cuota Inicial (no incluye el saldo final). Es la misma tabla de Cartera en Gestión, calculada en vivo contra los movimientos reales." />
+            <InfoTooltip text="Negocios con cuotas atrasadas de la Cuota Inicial (no incluye el saldo final). Se calcula en vivo contra los movimientos reales de la fiducia." />
           </h2>
           <p className={styles.consolidadoSubtitulo}>
             {paginacion ? `${paginacion.total.toLocaleString('es-CO')} negocios en mora. ` : ''}
             Filtrada por Torre y Estado del inmueble de la barra de arriba. Pasa el cursor sobre los encabezados para ver de dónde sale cada columna.
           </p>
         </div>
-        <Link to="/oliv/cartera-mora" className={styles.limpiar}><ExternalLink size={13} /> Abrir en Cartera</Link>
+        <Button variant="secondary" onClick={exportar} disabled={exportando || cargando || !paginacion || paginacion.total === 0}>
+          <Download size={14} /> {exportando ? 'Exportando…' : 'Exportar a Excel'}
+        </Button>
       </div>
 
       {error && <div className={dashStyles.formError}>{error}</div>}
+      {resultado && resultado.cotizacionesDisponibles === false && <div className={dashStyles.formError}>No se pudo leer el plan de pagos de las cotizaciones (Centro de Aplicaciones Comerciales). Sin ese plan no se calcula la mora y esta tabla sale vacía. Revisa que esa aplicación esté en línea y vuelve a cargar.</div>}
       {cargando && !resultado ? (
         <p className={dashStyles.loadingState}>Cargando…</p>
       ) : (

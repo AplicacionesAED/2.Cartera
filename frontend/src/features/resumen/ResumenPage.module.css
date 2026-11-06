@@ -371,34 +371,3 @@
 }
 
 /* ── Footer sync ─────────────────────────────────────────────────────── */
-
-.syncFooter {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  background: #fff;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-md) var(--space-lg);
-  font-size: var(--text-data-size);
-  color: var(--color-ink-muted);
-}
-
-.syncOk {
-  color: var(--color-success-ink);
-  flex-shrink: 0;
-}
-
-.syncErr {
-  color: var(--color-danger-ink);
-  flex-shrink: 0;
-}
-
-.syncPend {
-  color: var(--color-warning-ink);
-  flex-shrink: 0;
-}
-
-.syncResumen {
-  margin-left: auto;
-}

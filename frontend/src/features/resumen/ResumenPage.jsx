@@ -21,7 +21,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { exportarConsolidadoPdf } from './consolidadoPdf.js';
 import { exportarConsolidadoExcel } from './consolidadoExcel.js';
-import { Maximize2, Minimize2, Layers, MapPin, Building, X, CheckCircle2, XCircle, Clock, Download } from 'lucide-react';
+import { Maximize2, Minimize2, Layers, MapPin, Building, X, Download } from 'lucide-react';
 import { Field } from '../../components/ui/Field.jsx';
 import { CampoMes } from '../../components/ui/CampoMes.jsx';
 import { etiquetaMesLarga } from '../../components/ui/SelectorMes.jsx';
@@ -35,9 +35,7 @@ import { InfoTooltip } from '../../components/ui/InfoTooltip.jsx';
 import { useEstadoRetorno } from '../../hooks/useEstadoRetorno.js';
 import { useModoEnfocado } from '../../hooks/useModoEnfocado.js';
 import { getMesesResumen, getResumenEtapas, getDashboardRecaudo, getResumenStats } from '../../api/dashboard.js';
-import { getSyncLogsOportunidades } from '../../api/oportunidades.js';
 import { etiquetaEtapa, compararEtapas } from '../../utils/etapas.js';
-import { formatDateTime } from '../../utils/format.js';
 import { EsperadoRecaudadoChart, fmtDia, fmtMes } from '../dashboard/charts/EsperadoRecaudadoChart.jsx';
 import { KpiMatriz } from './KpiMatriz.jsx';
 import { FiltrosActivos } from './FiltrosActivos.jsx';
@@ -264,7 +262,6 @@ export function ResumenPage() {
   // KPIs + tendencia (mismo backend que Dashboard Plan vs. Recaudo)
   const [planRecaudo, setPlanRecaudo] = useState(null);
   const [resumenStats, setResumenStats] = useState(null);
-  const [syncLogs, setSyncLogs] = useState([]);
   const [rangoTendencia, setRangoTendencia] = useEstadoRetorno('resumen:rango', 'total');
   const [anioSeleccionado, setAnioSeleccionado] = useState(new Date().getFullYear());
   const [filtroPorcentaje, setFiltroPorcentaje] = useEstadoRetorno('resumen:filtroPorcentaje', 'ambos');
@@ -286,7 +283,6 @@ export function ResumenPage() {
       setMes((prev) => (prev && res.data.some((m) => m.mes === prev) ? prev : res.data.find((m) => m.enVivo)?.mes ?? res.data[res.data.length - 1]?.mes ?? ''));
     });
     getResumenStats().then((res) => setResumenStats(res.data)).catch(() => {});
-    getSyncLogsOportunidades(5).then((res) => setSyncLogs(res.data)).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -457,10 +453,6 @@ export function ResumenPage() {
       setExportandoExcel(false);
     }
   }
-
-  const lastSync = syncLogs[0];
-  const syncOk = syncLogs.filter((s) => s.status === 'success').length;
-  const syncErr = syncLogs.filter((s) => s.status === 'error').length;
 
   return (
     <div className={dashStyles.page}>
@@ -656,19 +648,6 @@ export function ResumenPage() {
           vista={vistaLinea}
           fill={enfocado}
         />
-      </div>
-
-      {/* Footer sync */}
-      <div className={styles.syncFooter}>
-        {lastSync ? (
-          <>
-            {lastSync.status === 'success' ? <CheckCircle2 size={14} className={styles.syncOk} /> : lastSync.status === 'error' ? <XCircle size={14} className={styles.syncErr} /> : <Clock size={14} className={styles.syncPend} />}
-            <span>Última sync Zoho: <strong>{formatDateTime(lastSync.iniciadoEn)}</strong> · {lastSync.registrosSync} registros<InfoTooltip text="Última sincronización de datos del CRM (Zoho), que alimenta los inmuebles y las oportunidades (planes de pagos). La fiducia se carga aparte, con el Excel diario." /></span>
-            <span className={styles.syncResumen}>Últimas 5: {syncOk} OK · {syncErr} errores<InfoTooltip text="Resultado de las 5 sincronizaciones más recientes de Zoho." /></span>
-          </>
-        ) : (
-          <span>Sin historial de sincronización</span>
-        )}
       </div>
     </div>
   );

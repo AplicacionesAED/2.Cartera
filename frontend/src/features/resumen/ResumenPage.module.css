@@ -178,18 +178,6 @@
   margin: 0;
 }
 
-.etapaToggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--color-ink-muted);
-  padding: 0;
-}
-
 /* ── Tabla Consolidado (grupos coloreados + columna fija) ───────────────── */
 
 .consolidadoCabecera {

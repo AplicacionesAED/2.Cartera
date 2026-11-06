@@ -18,7 +18,7 @@
 // fiducia/EncargosListPage.module.css).
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import ExcelJS from 'exceljs';
-import { Maximize2, Minimize2, MapPin, Building2, X, ChevronDown, ChevronUp, Download } from 'lucide-react';
+import { Maximize2, Minimize2, MapPin, Building2, X, Download } from 'lucide-react';
 import { Field } from '../../components/ui/Field.jsx';
 import { CampoMes } from '../../components/ui/CampoMes.jsx';
 import { etiquetaMesLarga } from '../../components/ui/SelectorMes.jsx';
@@ -35,7 +35,6 @@ import {
   getDashboardRecaudoOliv, getResumenStatsOliv,
 } from '../../api/olivResumen.js';
 import { EsperadoRecaudadoChart, fmtDia, fmtMes } from '../dashboard/charts/EsperadoRecaudadoChart.jsx';
-import { TorreRecaudoChart } from '../dashboard/charts/TorreRecaudoChart.jsx';
 import { KpiMatriz } from '../resumen/KpiMatriz.jsx';
 import { FiltrosActivos } from '../resumen/FiltrosActivos.jsx';
 import { SeccionCarteraOliv } from './SeccionCarteraOliv.jsx';
@@ -259,7 +258,6 @@ export function OlivResumenPage() {
   const [anioSeleccionado, setAnioSeleccionado] = useState(new Date().getFullYear());
   const [filtroPorcentaje, setFiltroPorcentaje] = useEstadoRetorno('oliv-resumen:filtroPorcentaje', 'ambos');
   const [vistaLinea, setVistaLinea] = useEstadoRetorno('oliv-resumen:vistaLinea', 'ambos');
-  const [torreChartAbierta, setTorreChartAbierta] = useState(false);
   const [enfocado, toggleEnfocado] = useModoEnfocado();
 
   // Sin jerarquía Etapa->Frente->Torre (Oliv es un solo proyecto) -- Torre y
@@ -654,10 +652,10 @@ export function OlivResumenPage() {
 
       {/* Informe de ventas (tabla) o gráficas: se elige cuál ver, por defecto la tabla */}
       <Tabs
-        ariaLabel="Informe de ventas o gráficas"
+        ariaLabel="Informe de ventas o gráfica"
         value={vistaInferior}
         onChange={setVistaInferior}
-        tabs={[{ key: 'informe', label: 'Informe de ventas' }, { key: 'graficas', label: 'Gráficas' }]}
+        tabs={[{ key: 'informe', label: 'Informe de ventas' }, { key: 'graficas', label: 'Gráfica' }]}
       />
 
       {vistaInferior === 'informe' && <SeccionCarteraOliv torre={torreFilter} estadoInmueble={estadoInmuebleFilter} />}
@@ -715,18 +713,6 @@ export function OlivResumenPage() {
             vista={vistaLinea}
             fill={enfocado}
           />
-        </div>
-
-        {/* Recaudo por Torre (colapsable) */}
-        <div className={styles.consolidadoCard}>
-          <button type="button" className={styles.etapaToggle} onClick={() => setTorreChartAbierta((v) => !v)}>
-            <h2 className={styles.consolidadoTitulo}>
-              Recaudo por Torre
-              <InfoTooltip text="Esperado vs. recaudado del plan de pagos, agrupado por Torre." />
-            </h2>
-            {torreChartAbierta ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </button>
-          {torreChartAbierta && <TorreRecaudoChart totalesPorTorre={planRecaudo?.totalesPorTorre ?? {}} />}
         </div>
         </>
       )}

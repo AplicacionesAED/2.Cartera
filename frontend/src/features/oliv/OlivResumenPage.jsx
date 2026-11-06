@@ -41,6 +41,7 @@ import { TorreRecaudoChart } from '../dashboard/charts/TorreRecaudoChart.jsx';
 import { KpiMatriz } from '../resumen/KpiMatriz.jsx';
 import { FiltrosActivos } from '../resumen/FiltrosActivos.jsx';
 import { SeccionCarteraOliv } from './SeccionCarteraOliv.jsx';
+import { Tabs } from '../../components/ui/Tabs.jsx';
 import { exportarConsolidadoPdf } from '../resumen/consolidadoPdf.js';
 import dashStyles from '../dashboard/Dashboard.module.css';
 import styles from '../resumen/ResumenPage.module.css';
@@ -248,6 +249,7 @@ export function OlivResumenPage() {
   const [datos, setDatos] = useState(null);
   const [error, setError] = useState(null);
   const [exportandoConsolidado, setExportandoConsolidado] = useState(false);
+  const [vistaInferior, setVistaInferior] = useState('informe'); // 'informe' (tabla) | 'graficas'
   const [formatoExport, setFormatoExport] = useState('xlsx');
   const [exportandoPdf, setExportandoPdf] = useState(false);
 
@@ -574,7 +576,7 @@ export function OlivResumenPage() {
         )}
       </div>
       <FiltrosActivos
-        alcance="Torre y Estado del inmueble filtran los KPIs, la tabla de Cartera y la tendencia; el Periodo, los KPIs y la tendencia. El Consolidado usa su propio mes."
+        alcance="Torre y Estado del inmueble filtran los KPIs, el Informe de ventas y las gráficas; el Periodo, los KPIs y las gráficas. El Consolidado usa su propio mes."
         chips={[
           ...torreFilter.map((v) => ({ clave: `torre-${v}`, texto: v, onQuitar: () => setTorreFilter(torreFilter.filter((x) => x !== v)) })),
           ...estadoInmuebleFilter.map((v) => ({ clave: `estado-${v}`, texto: v, onQuitar: () => setEstadoInmuebleFilter(estadoInmuebleFilter.filter((x) => x !== v)) })),
@@ -654,73 +656,84 @@ export function OlivResumenPage() {
         {meses.length <= 1 && <p className={styles.avisoMeses}>Todavía no hay meses cerrados para navegar -- se va a ir guardando una foto automáticamente al cierre de cada mes.</p>}
       </div>
 
-      {/* Cartera en Gestión (Cuota inicial): la misma tabla de esa pantalla */}
-      <SeccionCarteraOliv torre={torreFilter} estadoInmueble={estadoInmuebleFilter} />
+      {/* Informe de ventas (tabla) o gráficas: se elige cuál ver, por defecto la tabla */}
+      <Tabs
+        ariaLabel="Informe de ventas o gráficas"
+        value={vistaInferior}
+        onChange={setVistaInferior}
+        tabs={[{ key: 'informe', label: 'Informe de ventas' }, { key: 'graficas', label: 'Gráficas' }]}
+      />
 
-      {/* Tendencia: plan de pagos vs. recaudo real */}
-      <div className={enfocado ? styles.tendenciaEnfocada : styles.tendenciaCard}>
-        <div className={styles.tendenciaHeader}>
-          <div className={styles.tendenciaHeaderTop}>
-            <h2 className={styles.tendenciaTitulo}>
-              Plan de pagos vs. Recaudo — tendencia
-              <InfoTooltip text="Compara, para todo el portafolio de Oliv, cuánto se esperaba recaudar según el plan de pagos contra lo efectivamente recaudado. Incluye periodos futuros del plan." />
-            </h2>
-            <div className={styles.tendenciaHeaderAcciones}>
-              {resumenStats && (
-                <span className={styles.tendenciaStats}>
-                  Recaudado en el año <strong>{fmtMoney(resumenStats.recaudoAnio)}</strong>
-                  <span className={styles.puntoSep}>·</span>
-                  Separaciones este mes <strong>{resumenStats.separacionesMes}</strong>
-                </span>
-              )}
-              <Button variant="secondary" onClick={toggleEnfocado}>
-                {enfocado ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
-                {enfocado ? 'Salir de pantalla completa' : 'Pantalla completa'}
-              </Button>
+      {vistaInferior === 'informe' && <SeccionCarteraOliv torre={torreFilter} estadoInmueble={estadoInmuebleFilter} />}
+
+      {vistaInferior === 'graficas' && (
+        <>
+        {/* Tendencia: plan de pagos vs. recaudo real */}
+        <div className={enfocado ? styles.tendenciaEnfocada : styles.tendenciaCard}>
+          <div className={styles.tendenciaHeader}>
+            <div className={styles.tendenciaHeaderTop}>
+              <h2 className={styles.tendenciaTitulo}>
+                Plan de pagos vs. Recaudo — tendencia
+                <InfoTooltip text="Compara, para todo el portafolio de Oliv, cuánto se esperaba recaudar según el plan de pagos contra lo efectivamente recaudado. Incluye periodos futuros del plan." />
+              </h2>
+              <div className={styles.tendenciaHeaderAcciones}>
+                {resumenStats && (
+                  <span className={styles.tendenciaStats}>
+                    Recaudado en el año <strong>{fmtMoney(resumenStats.recaudoAnio)}</strong>
+                    <span className={styles.puntoSep}>·</span>
+                    Separaciones este mes <strong>{resumenStats.separacionesMes}</strong>
+                  </span>
+                )}
+                <Button variant="secondary" onClick={toggleEnfocado}>
+                  {enfocado ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+                  {enfocado ? 'Salir de pantalla completa' : 'Pantalla completa'}
+                </Button>
+              </div>
+            </div>
+            <div className={styles.tendenciaPeriodoActual}>
+              Periodo: <span className={styles.tendenciaPeriodoBadge}>{labelVentana}</span>
+              <span className={styles.tendenciaPeriodoNota}>— cambiar arriba, en "Periodo"</span>
+            </div>
+            <div className={dashStyles.toggleGroup}>
+              {FILTROS_PORCENTAJE.map((f) => (
+                <button key={f.key} type="button" className={`${dashStyles.toggleButton} ${filtroPorcentaje === f.key ? dashStyles.toggleButtonActive : ''}`} onClick={() => setFiltroPorcentaje(f.key)}>
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            <div className={dashStyles.toggleGroup}>
+              {VISTAS_LINEA.map((v) => (
+                <button key={v.key} type="button" className={`${dashStyles.toggleButton} ${vistaLinea === v.key ? dashStyles.toggleButtonActive : ''}`} onClick={() => setVistaLinea(v.key)}>
+                  {v.label}
+                </button>
+              ))}
             </div>
           </div>
-          <div className={styles.tendenciaPeriodoActual}>
-            Periodo: <span className={styles.tendenciaPeriodoBadge}>{labelVentana}</span>
-            <span className={styles.tendenciaPeriodoNota}>— cambiar arriba, en "Periodo"</span>
-          </div>
-          <div className={dashStyles.toggleGroup}>
-            {FILTROS_PORCENTAJE.map((f) => (
-              <button key={f.key} type="button" className={`${dashStyles.toggleButton} ${filtroPorcentaje === f.key ? dashStyles.toggleButtonActive : ''}`} onClick={() => setFiltroPorcentaje(f.key)}>
-                {f.label}
-              </button>
-            ))}
-          </div>
-          <div className={dashStyles.toggleGroup}>
-            {VISTAS_LINEA.map((v) => (
-              <button key={v.key} type="button" className={`${dashStyles.toggleButton} ${vistaLinea === v.key ? dashStyles.toggleButtonActive : ''}`} onClick={() => setVistaLinea(v.key)}>
-                {v.label}
-              </button>
-            ))}
-          </div>
+
+          <EsperadoRecaudadoChart
+            meses={puntosTendencia}
+            totales={totalesElegidos}
+            formatLabel={formatLabelTendencia}
+            unidadPeriodo={granularidadTendencia === 'dia' ? 'día' : granularidadTendencia === 'quincena' ? 'quincena' : 'mes'}
+            altura={300}
+            vista={vistaLinea}
+            fill={enfocado}
+          />
         </div>
 
-        <EsperadoRecaudadoChart
-          meses={puntosTendencia}
-          totales={totalesElegidos}
-          formatLabel={formatLabelTendencia}
-          unidadPeriodo={granularidadTendencia === 'dia' ? 'día' : granularidadTendencia === 'quincena' ? 'quincena' : 'mes'}
-          altura={300}
-          vista={vistaLinea}
-          fill={enfocado}
-        />
-      </div>
-
-      {/* Recaudo por Torre (colapsable) */}
-      <div className={styles.consolidadoCard}>
-        <button type="button" className={styles.etapaToggle} onClick={() => setTorreChartAbierta((v) => !v)}>
-          <h2 className={styles.consolidadoTitulo}>
-            Recaudo por Torre
-            <InfoTooltip text="Esperado vs. recaudado del plan de pagos, agrupado por Torre." />
-          </h2>
-          {torreChartAbierta ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </button>
-        {torreChartAbierta && <TorreRecaudoChart totalesPorTorre={planRecaudo?.totalesPorTorre ?? {}} />}
-      </div>
+        {/* Recaudo por Torre (colapsable) */}
+        <div className={styles.consolidadoCard}>
+          <button type="button" className={styles.etapaToggle} onClick={() => setTorreChartAbierta((v) => !v)}>
+            <h2 className={styles.consolidadoTitulo}>
+              Recaudo por Torre
+              <InfoTooltip text="Esperado vs. recaudado del plan de pagos, agrupado por Torre." />
+            </h2>
+            {torreChartAbierta ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+          {torreChartAbierta && <TorreRecaudoChart totalesPorTorre={planRecaudo?.totalesPorTorre ?? {}} />}
+        </div>
+        </>
+      )}
 
       {/* Footer sync -- Oliv solo expone el ÚLTIMO sync (GET
           /oliv/oportunidades/sync/status), no un historial de los últimos 5

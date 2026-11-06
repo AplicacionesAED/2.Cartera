@@ -1,4 +1,4 @@
-// Tabla de Cartera en Gestión de Oliv (vista Cuota Inicial, mora activa) dentro del Resumen, bajo el Consolidado: las mismas
+// Informe de ventas de Oliv (negocios con cuota inicial en mora) dentro del Resumen, bajo el Consolidado: las mismas
 // 20 columnas y el mismo cálculo que la pantalla Cartera en Gestión (GET /oliv/resumen/cartera-mora), filtrada por la Torre y
 // el Estado del inmueble de la barra del Resumen. Clic en una fila abre el negocio.
 import { useEffect, useRef, useState } from 'react';
@@ -73,7 +73,7 @@ export function SeccionCarteraOliv({ torre, estadoInmueble }) {
         page: 1,
         limit: 9999,
       });
-      await descargarCarteraOliv(res.data.data, `oliv-cartera-en-gestion-${new Date().toISOString().slice(0, 10)}.xlsx`);
+      await descargarCarteraOliv(res.data.data, `oliv-informe-de-ventas-${new Date().toISOString().slice(0, 10)}.xlsx`);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -96,8 +96,8 @@ export function SeccionCarteraOliv({ torre, estadoInmueble }) {
       <div className={styles.consolidadoCabecera}>
         <div>
           <h2 className={styles.consolidadoTitulo}>
-            Cartera en gestión — Cuota inicial
-            <InfoTooltip text="Negocios con cuotas atrasadas de la Cuota Inicial (no incluye el saldo final). Se calcula en vivo contra los movimientos reales de la fiducia." />
+            Informe de ventas
+            <InfoTooltip text="Negocios con cuotas atrasadas de la Cuota Inicial (no incluye el saldo final), con los datos del comprador y los valores del negocio. Se calcula en vivo contra los movimientos reales de la fiducia." />
           </h2>
           <p className={styles.consolidadoSubtitulo}>
             {paginacion ? `${paginacion.total.toLocaleString('es-CO')} negocios en mora. ` : ''}

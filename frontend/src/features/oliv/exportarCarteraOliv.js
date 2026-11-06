@@ -31,7 +31,7 @@ const COLUMNAS = [
 
 export async function descargarCarteraOliv(filas, nombreArchivo) {
   const wb = new ExcelJS.Workbook();
-  const ws = wb.addWorksheet('Cartera en Gestión');
+  const ws = wb.addWorksheet('Informe de Ventas');
   const relleno = (argb) => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
 
   COLUMNAS.forEach(([, ancho], i) => { ws.getColumn(i + 1).width = ancho; });

@@ -1,6 +1,6 @@
 // Informe de ventas de Oliv (todos los negocios con oportunidad) dentro del Resumen, bajo el Consolidado: las mismas
-// 20 columnas y el mismo cálculo que la pantalla Cartera en Gestión (GET /oliv/resumen/cartera-mora), filtrada por la Torre y
-// el Estado del inmueble de la barra del Resumen. Clic en una fila abre el negocio.
+// datos y el mismo cálculo que la pantalla Cartera en Gestión (GET /oliv/resumen/cartera-mora), filtrada por la Torre y
+// el Estado del inmueble de la barra del Resumen, en una tabla con el estilo de Negocios. Clic en una fila abre el negocio.
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download } from 'lucide-react';
@@ -9,9 +9,9 @@ import { Pagination } from '../../components/ui/Pagination.jsx';
 import { InfoTooltip } from '../../components/ui/InfoTooltip.jsx';
 import { getCarteraMoraOliv } from '../../api/olivResumen.js';
 import { descargarCarteraOliv } from './exportarCarteraOliv.js';
-import { EncabezadoCarteraOlivInicial, FilaCarteraOlivInicial, COLUMNAS_CARTERA_OLIV_INICIAL } from './TablaCarteraOliv.jsx';
+import { EncabezadoInformeVentasOliv, FilaInformeVentasOliv, COLUMNAS_INFORME_VENTAS_OLIV } from './TablaInformeVentasOliv.jsx';
 import dashStyles from '../dashboard/Dashboard.module.css';
-import carteraStyles from '../cartera-mora/CarteraMoraPage.module.css';
+import tablaStyles from '../negocios/NegociosPage.module.css';
 import styles from '../resumen/ResumenPage.module.css';
 
 const LIMIT = 50;
@@ -115,16 +115,16 @@ export function SeccionCarteraOliv({ torre, estadoInmueble }) {
         <p className={dashStyles.loadingState}>Cargando…</p>
       ) : (
         <>
-          <div className={carteraStyles.tableScroll}>
-            <table className={dashStyles.table}>
+          <div className={tablaStyles.tableWrap}>
+            <table className={tablaStyles.table}>
               <thead>
-                <EncabezadoCarteraOlivInicial sort={sort} onSort={toggleSort} />
+                <EncabezadoInformeVentasOliv sort={sort} onSort={toggleSort} />
               </thead>
               <tbody>
                 {filas.length === 0 ? (
-                  <tr><td colSpan={COLUMNAS_CARTERA_OLIV_INICIAL} className={carteraStyles.sinResultados}>Sin resultados.</td></tr>
+                  <tr><td colSpan={COLUMNAS_INFORME_VENTAS_OLIV} className={tablaStyles.mensaje}>Sin resultados.</td></tr>
                 ) : (
-                  filas.map((f) => <FilaCarteraOlivInicial key={f.id} f={f} onClick={(e) => abrirFila(e, f)} className={carteraStyles.filaCtxMenu} />)
+                  filas.map((f) => <FilaInformeVentasOliv key={f.id} f={f} onClick={(e) => abrirFila(e, f)} />)
                 )}
               </tbody>
             </table>

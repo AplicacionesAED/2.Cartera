@@ -529,7 +529,7 @@ export function OlivResumenPage() {
       {/* Filtros globales de ubicación -- afectan KPIs y tendencia. Sin
           cascada (Torre y Estado del inmueble son independientes, Oliv no
           tiene jerarquía Etapa->Frente->Torre). */}
-      <div className={styles.toolbarCard}>
+      <div className={`${styles.toolbarCard} ${vistaInferior === 'informe' ? styles.toolbarCardSuelta : ''}`}>
       <div className={styles.toolbarFila}>
         {torresDisponibles.length > 0 && (
           <Field className={dashStyles.fieldSm} label={<span className={styles.labelConIcono}><Building2 size={13} />Torre</span>}>

@@ -503,7 +503,7 @@ async function obtenerCarteraMora({ search, torre, estadoInmueble, rango, vista,
         maxDiasAtraso: f.diasAtrasoSaldoContraentrega ?? 0,
         esperadoAFecha: f.valorSaldoContraentrega ?? 0,
       }))
-    : todasLasFilas.filter((f) => f.cuotasEnMoraInicial > 0).map((f) => ({
+    : todasLasFilas.filter((f) => vista === 'todos' || f.cuotasEnMoraInicial > 0).map((f) => ({
         ...f,
         cuotasEnMora: f.cuotasEnMoraInicial,
         montoEnMora: f.montoEnMoraInicial,

@@ -1,4 +1,4 @@
-// Informe de ventas de Oliv (negocios con cuota inicial en mora) dentro del Resumen, bajo el Consolidado: las mismas
+// Informe de ventas de Oliv (todos los negocios) dentro del Resumen, bajo el Consolidado: las mismas
 // 20 columnas y el mismo cálculo que la pantalla Cartera en Gestión (GET /oliv/resumen/cartera-mora), filtrada por la Torre y
 // el Estado del inmueble de la barra del Resumen. Clic en una fila abre el negocio.
 import { useEffect, useRef, useState } from 'react';
@@ -34,7 +34,7 @@ export function SeccionCarteraOliv({ torre, estadoInmueble }) {
     const id = ++ultimaPeticion.current;
     setCargando(true);
     getCarteraMoraOliv({
-      vista: 'inicial',
+      vista: 'todos',
       torre: torre?.length ? torre : undefined,
       estadoInmueble: estadoInmueble?.length ? estadoInmueble : undefined,
       sortBy: sort.key ?? undefined,
@@ -65,7 +65,7 @@ export function SeccionCarteraOliv({ torre, estadoInmueble }) {
     setExportando(true);
     try {
       const res = await getCarteraMoraOliv({
-        vista: 'inicial',
+        vista: 'todos',
         torre: torre?.length ? torre : undefined,
         estadoInmueble: estadoInmueble?.length ? estadoInmueble : undefined,
         sortBy: sort.key ?? undefined,
@@ -97,10 +97,10 @@ export function SeccionCarteraOliv({ torre, estadoInmueble }) {
         <div>
           <h2 className={styles.consolidadoTitulo}>
             Informe de ventas
-            <InfoTooltip text="Negocios con cuotas atrasadas de la Cuota Inicial (no incluye el saldo final), con los datos del comprador y los valores del negocio. Se calcula en vivo contra los movimientos reales de la fiducia." />
+            <InfoTooltip text="Todos los negocios de Oliv, con los datos del comprador y los valores del negocio. Las columnas de mora cuentan solo las cuotas atrasadas de la Cuota Inicial (no incluye el saldo final). Se calcula en vivo contra los movimientos reales de la fiducia." />
           </h2>
           <p className={styles.consolidadoSubtitulo}>
-            {paginacion ? `${paginacion.total.toLocaleString('es-CO')} negocios en mora. ` : ''}
+            {paginacion ? `${paginacion.total.toLocaleString('es-CO')} negocios.` : ''}
             Filtrada por Torre y Estado del inmueble de la barra de arriba. Pasa el cursor sobre los encabezados para ver de dónde sale cada columna.
           </p>
         </div>
@@ -110,7 +110,7 @@ export function SeccionCarteraOliv({ torre, estadoInmueble }) {
       </div>
 
       {error && <div className={dashStyles.formError}>{error}</div>}
-      {resultado && resultado.cotizacionesDisponibles === false && <div className={dashStyles.formError}>No se pudo leer el plan de pagos de las cotizaciones (Centro de Aplicaciones Comerciales). Sin ese plan no se calcula la mora y esta tabla sale vacía. Revisa que esa aplicación esté en línea y vuelve a cargar.</div>}
+      {resultado && resultado.cotizacionesDisponibles === false && <div className={dashStyles.formError}>No se pudo leer el plan de pagos de las cotizaciones (Centro de Aplicaciones Comerciales). Sin ese plan no se calcula la mora y esta tabla sale con la mora en cero. Revisa que esa aplicación esté en línea y vuelve a cargar.</div>}
       {cargando && !resultado ? (
         <p className={dashStyles.loadingState}>Cargando…</p>
       ) : (

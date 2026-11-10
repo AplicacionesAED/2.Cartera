@@ -1,4 +1,4 @@
-// Informe de ventas de Oliv (todos los negocios) dentro del Resumen, bajo el Consolidado: las mismas
+// Informe de ventas de Oliv (todos los negocios con oportunidad) dentro del Resumen, bajo el Consolidado: las mismas
 // 20 columnas y el mismo cálculo que la pantalla Cartera en Gestión (GET /oliv/resumen/cartera-mora), filtrada por la Torre y
 // el Estado del inmueble de la barra del Resumen. Clic en una fila abre el negocio.
 import { useEffect, useRef, useState } from 'react';
@@ -97,7 +97,7 @@ export function SeccionCarteraOliv({ torre, estadoInmueble }) {
         <div>
           <h2 className={styles.consolidadoTitulo}>
             Informe de ventas
-            <InfoTooltip text="Todos los negocios de Oliv, con los datos del comprador y los valores del negocio. Las columnas de mora cuentan solo las cuotas atrasadas de la Cuota Inicial (no incluye el saldo final). Se calcula en vivo contra los movimientos reales de la fiducia." />
+            <InfoTooltip text="Todos los negocios de Oliv con oportunidad, con los datos del comprador y los valores del negocio. Las columnas de mora cuentan solo las cuotas atrasadas de la Cuota Inicial (no incluye el saldo final). Se calcula en vivo contra los movimientos reales de la fiducia." />
           </h2>
           <p className={styles.consolidadoSubtitulo}>
             {paginacion ? `${paginacion.total.toLocaleString('es-CO')} negocios.` : ''}

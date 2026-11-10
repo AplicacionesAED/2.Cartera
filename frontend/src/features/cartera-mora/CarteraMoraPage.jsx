@@ -30,7 +30,9 @@ import { formatCOP, formatDate } from '../../utils/format.js';
 import { etiquetaEtapa } from '../../utils/etapas.js';
 import { StatTile } from '../dashboard/StatTile.jsx';
 import { CeldaDoble, ChipDias, BarraMora, ValorVencido } from './CarteraCeldas.jsx';
+import { CeldaPersona } from '../../components/ui/CeldaPersona.jsx';
 import dashStyles from '../dashboard/Dashboard.module.css';
+import tablaStyles from '../negocios/NegociosPage.module.css';
 import styles from './CarteraMoraPage.module.css';
 import { rutaApp } from '../../utils/rutas.js';
 
@@ -479,7 +481,7 @@ export function CarteraMoraPage() {
               <>
                 <div className={styles.card}>
                 <div className={styles.tableScroll}>
-                  <table className={dashStyles.table}>
+                  <table className={`${tablaStyles.table} ${styles.tablaNegocios}`}>
                     <thead>
                       {esContraentrega ? (
                         <tr>
@@ -520,7 +522,7 @@ export function CarteraMoraPage() {
                             <td>{f.etapa ? etiquetaEtapa(f.etapa) : '—'}</td>
                             <td><CeldaDoble arriba={f.frente} abajo={f.torre != null ? `Torre ${f.torre}` : null} /></td>
                             <td>{f.unidad ?? '—'}</td>
-                            <td className={styles.truncar} title={f.comprador ?? ''}>{f.comprador ?? '—'}</td>
+                            <td><CeldaPersona nombre={f.comprador} /></td>
                             <td className={styles.numCellCentro}>{f.fechaContrato ? formatDate(f.fechaContrato) : '—'}</td>
                             <td>{f.referencia ?? '—'}</td>
                             <td className={`${styles.numCellCentro} ${styles.tonoWarning}`}>{formatDate(f.fechaSaldoContraentrega)}</td>
@@ -533,7 +535,7 @@ export function CarteraMoraPage() {
                             <td>{f.etapa ? etiquetaEtapa(f.etapa) : '—'}</td>
                             <td><CeldaDoble arriba={f.frente} abajo={f.torre != null ? `Torre ${f.torre}` : null} /></td>
                             <td>{f.negocioId ? <Link to={`/negocios/inv-${f.id}`}>{f.unidad ?? f.id}</Link> : (f.unidad ?? '—')}</td>
-                            <td className={styles.truncar} title={f.comprador ?? ''}>{f.comprador ?? '—'}</td>
+                            <td><CeldaPersona nombre={f.comprador} /></td>
                             <td className={styles.numCellCentro}>{f.fechaContrato ? formatDate(f.fechaContrato) : '—'}</td>
                             <td>{f.referencia ?? '—'}</td>
                             <td className={styles.numCellCentro}>{f.area != null ? f.area.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}</td>

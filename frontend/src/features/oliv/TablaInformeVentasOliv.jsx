@@ -2,6 +2,7 @@
 // insignia de etapa, cifras a la derecha). Cartera en Gestión usa TablaCarteraOliv, sin cambios.
 import { SortHeader } from '../../components/ui/SortHeader.jsx';
 import { Badge } from '../../components/ui/Badge.jsx';
+import { CeldaPersona } from '../../components/ui/CeldaPersona.jsx';
 import { ariaSort } from '../../hooks/useSortableTable.js';
 import { formatCOP, formatDate } from '../../utils/format.js';
 import { INFO_COLUMNAS_CARTERA_OLIV as INFO } from './infoColumnasCarteraOliv.js';
@@ -13,11 +14,6 @@ const fmtPct = (v) => (v == null ? '—' : `${v.toFixed(1)}%`);
 const cop = (v) => (v != null ? formatCOP(v) : '—');
 const dash = <span className={styles.muted}>—</span>;
 const texto = (v) => (v ? <span className={styles.nowrap}>{v}</span> : dash);
-
-function iniciales(nombre = '') {
-  const partes = nombre.trim().split(/\s+/).filter(Boolean);
-  return `${partes[0]?.[0] ?? ''}${partes.length > 1 ? partes[partes.length - 1][0] : ''}`.toUpperCase() || '?';
-}
 
 // [etiqueta, llave de orden, alineación]
 const COLUMNAS = [
@@ -50,14 +46,7 @@ export function FilaInformeVentasOliv({ f, onClick }) {
       <td>{texto(f.torre)}</td>
       <td><span className={styles.nombre}>{f.unidad ?? f.id}</span></td>
       <td className={num}>{f.area != null ? f.area.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}</td>
-      <td>
-        {f.comprador ? (
-          <div className={styles.persona}>
-            <span className={styles.avatar}>{iniciales(f.comprador)}</span>
-            <span className={styles.nowrap}>{f.comprador}</span>
-          </div>
-        ) : dash}
-      </td>
+      <td><CeldaPersona nombre={f.comprador} /></td>
       <td>{texto(f.tipoIdentificacion)}</td>
       <td>{texto(f.identificacion)}</td>
       <td>{texto(f.paisResidencia)}</td>

@@ -33,7 +33,9 @@ import { getCarteraMoraOliv } from '../../api/olivResumen.js';
 import { formatCOP, formatDate } from '../../utils/format.js';
 import { StatTile } from '../dashboard/StatTile.jsx';
 import { CeldaDoble, ChipDias, ValorVencido } from '../cartera-mora/CarteraCeldas.jsx';
+import { CeldaPersona } from '../../components/ui/CeldaPersona.jsx';
 import dashStyles from '../dashboard/Dashboard.module.css';
+import tablaStyles from '../negocios/NegociosPage.module.css';
 import styles from '../cartera-mora/CarteraMoraPage.module.css';
 import { rutaApp } from '../../utils/rutas.js';
 import { descargarInformeCarteraOliv } from './informeCarteraOliv.js';
@@ -380,7 +382,7 @@ export function OlivCarteraMoraPage() {
               <>
                 <div className={styles.card}>
                 <div className={styles.tableScroll}>
-                  <table className={dashStyles.table}>
+                  <table className={`${tablaStyles.table} ${styles.tablaNegocios}`}>
                     <thead>
                       {esContraentrega ? (
                         <tr>
@@ -420,7 +422,7 @@ export function OlivCarteraMoraPage() {
                           <tr key={f.id} onClick={(e) => abrirFila(e, f)} onContextMenu={(e) => abrirMenuContextual(e, f)} className={styles.filaCtxMenu}>
                             <td><CeldaDoble arriba="Oliv" abajo={f.torre ?? null} /></td>
                             <td>{f.unidad ?? '—'}</td>
-                            <td className={styles.truncar} title={f.comprador ?? ''}>{f.comprador ?? '—'}</td>
+                            <td><CeldaPersona nombre={f.comprador} /></td>
                             <td>{f.referenciaRecaudo ?? ''}</td>
                             <td className={`${styles.numCellCentro} ${styles.tonoWarning}`}>{formatDate(f.fechaSaldoContraentrega)}</td>
                             <td className={styles.numCellCentro}><ValorVencido valor={f.montoEnMora} /></td>
@@ -433,7 +435,7 @@ export function OlivCarteraMoraPage() {
                             <td>{f.vista ?? '—'}</td>
                             <td>{f.referenciaRecaudo ?? ''}</td>
                             <td className={styles.numCellCentro}>{f.area != null ? f.area.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}</td>
-                            <td className={styles.truncar} title={f.comprador ?? ''}>{f.comprador ?? '—'}</td>
+                            <td><CeldaPersona nombre={f.comprador} /></td>
                             <td className={styles.numCellCentro}>{formatDate(f.fechaContrato)}</td>
                             <td className={styles.numCellCentro}>{formatDate(f.fechaSaldoContraentrega)}</td>
                             <td className={styles.numCellCentro}>{f.valorInmueble != null ? formatCOP(f.valorInmueble) : '—'}</td>

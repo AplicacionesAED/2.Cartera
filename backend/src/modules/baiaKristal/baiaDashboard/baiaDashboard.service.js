@@ -173,9 +173,21 @@ async function construirFilasCompletas() {
       const pagos = normalizarPagos(movimientosPorNegocioId.get(negocio.id) || []);
       const { cuotas, resumen } = conciliar(cuotasPlan, pagos);
       valorInmueble = cuotas.length > 0 ? resumen.totalPlan : null;
-      fechaSaldoContraentrega = resumen.saldoContraentrega?.fechaEstimada ?? null;
-      valorSaldoContraentrega = resumen.saldoContraentrega?.valorPlan ?? null;
-      const cuotasCuotaInicial = cuotas.slice(0, -1);
+      // Plan negociado cuyo "Saldo contraentrega" vale 0 y la fiducia sí separa un saldo (cuota inicial < venta):
+      // el saldo final real es la última cuota con valor.
+      const ciFiduciaKey = Object.keys(negocio.datos || {}).find((k) => k.toLowerCase() === 'cuota inicial');
+      const ciFiduciaPrevia = ciFiduciaKey ? parseMonto(negocio.datos[ciFiduciaKey]) : NaN;
+      const fiduciaSeparaSaldo = !isNaN(ciFiduciaPrevia) && valorVenta != null && !isNaN(valorVenta) && ciFiduciaPrevia < valorVenta - 1000;
+      let idxSaldo = cuotas.length - 1;
+      if (fiduciaSeparaSaldo && cuotas.length >= 3 && cuotas[idxSaldo].valorPlan <= 1000) {
+        for (let i = cuotas.length - 2; i >= 1; i--) {
+          if (cuotas[i].valorPlan > 1000) { idxSaldo = i; break; }
+        }
+      }
+      const cuotaSaldo = cuotas.length > 0 ? cuotas[idxSaldo] : null;
+      fechaSaldoContraentrega = cuotaSaldo?.fechaEstimada ?? null;
+      valorSaldoContraentrega = cuotaSaldo?.valorPlan ?? null;
+      const cuotasCuotaInicial = cuotas.slice(0, idxSaldo);
       valorCuotaInicial = cuotasCuotaInicial.length > 0 ? cuotasCuotaInicial.reduce((s, c) => s + c.valorPlan, 0) : null;
       abonadoCuotaInicial = cuotasCuotaInicial.length > 0 ? cuotasCuotaInicial.reduce((s, c) => s + c.cubierto, 0) : null;
 
@@ -200,7 +212,7 @@ async function construirFilasCompletas() {
       maxDiasAtrasoInicial = enMoraInicial.length > 0 ? Math.max(...enMoraInicial.map((c) => c.diasAtraso ?? 0)) : 0;
       esperadoAFechaInicial = cuotasCuotaInicial.filter((c) => c.fechaEstimada && c.fechaEstimada <= hoy).reduce((s, c) => s + c.valorPlan, 0);
 
-      const sce = resumen.saldoContraentrega;
+      const sce = cuotaSaldo;
       if (sce?.atrasada) {
         const pendiente = Math.max(0, sce.valorPlan - sce.cubierto);
         if (pendiente > 1000) {
@@ -210,7 +222,7 @@ async function construirFilasCompletas() {
         }
       }
 
-      const ultimaCuota = cuotas[cuotas.length - 1];
+      const ultimaCuota = cuotaSaldo;
       const paramsAcumular = { cuotas, cuotasCuotaInicial, ultimaCuota, pagos, resumen };
       acumularPorPeriodo({ ...paramsAcumular, keyFn: mesKey, porPeriodo: porMes, porPeriodoInicial: porMesInicial, porPeriodoContraentrega: porMesContraentrega });
       acumularPorPeriodo({ ...paramsAcumular, keyFn: diaKey, porPeriodo: porDia, porPeriodoInicial: porDiaInicial, porPeriodoContraentrega: porDiaContraentrega });

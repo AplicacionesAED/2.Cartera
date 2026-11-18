@@ -58,19 +58,17 @@ const formatoDe = (key) => (CLAVES_PCT.has(key) ? FORMATO_PCT : FORMATO_PESOS);
 const EXTRA_COLUMNAS = [
   { label: 'Fecha límite vencida más antigua (sin pagar)', fmt: 'dd/mm/yyyy', ancho: 22 },
   { label: 'Días de vencimiento actual (sin pagar)', fmt: FORMATO_PESOS, ancho: 18 },
-  { label: 'Valor vencido', fmt: FORMATO_PESOS, ancho: 20 },
   { label: 'Máx. días de atraso al pagar (fecha del pago − fecha límite)', fmt: FORMATO_PESOS, ancho: 24 },
-  { label: 'Cuotas pagadas con atraso', fmt: FORMATO_PESOS, ancho: 16 },
 ];
 const fechaUtc = (iso) => (iso ? new Date(`${iso}T00:00:00Z`) : null);
 function extrasInmueble(u) {
   if (u.estado !== 'Vendida') return EXTRA_COLUMNAS.map(() => null);
-  return [fechaUtc(u.fechaLimiteVencidaMasAntigua), u.diasVencimientoActual, u.valorVencido, u.maxDiasAtrasoAlPagar, u.cuotasPagadasConAtraso];
+  return [fechaUtc(u.fechaLimiteVencidaMasAntigua), u.diasVencimientoActual, u.maxDiasAtrasoAlPagar];
 }
-// Fila de etapa o total: sin fecha; días = el mayor; valor y cuotas = suma.
+// Fila de etapa o total: sin fecha; días = el mayor.
 function extrasAgregado(lista) {
   const v = lista.filter((u) => u.estado === 'Vendida');
-  return [null, Math.max(0, ...v.map((u) => u.diasVencimientoActual ?? 0)), v.reduce((a, u) => a + (u.valorVencido ?? 0), 0), Math.max(0, ...v.map((u) => u.maxDiasAtrasoAlPagar ?? 0)), v.reduce((a, u) => a + (u.cuotasPagadasConAtraso ?? 0), 0)];
+  return [null, Math.max(0, ...v.map((u) => u.diasVencimientoActual ?? 0)), Math.max(0, ...v.map((u) => u.maxDiasAtrasoAlPagar ?? 0))];
 }
 
 export function agregarHojaConsolidadoDetallado(wb, { datos, columnas, grupos, tonos, unidades, etiquetaEtapa }) {

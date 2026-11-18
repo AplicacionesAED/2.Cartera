@@ -21,6 +21,10 @@ export function getMesesResumen() {
   return client.get('/negocios/resumen-etapas/meses');
 }
 
+export function getDesgloseConsolidado() {
+  return client.get('/negocios/resumen-etapas/desglose');
+}
+
 export function getResumenEtapas(mes) {
   return client.get(`/negocios/resumen-etapas${toQuery({ mes })}`);
 }

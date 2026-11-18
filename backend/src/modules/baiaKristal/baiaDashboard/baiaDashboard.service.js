@@ -828,6 +828,39 @@ async function obtenerResumenPorEtapa() {
   return { etapas, total, fechaCorte };
 }
 
+// Desglose del Consolidado: una fila por inmueble de las mismas etapas, con lo que aporta a cada columna. El Consolidado
+// netea por etapa (max(0, ventas - recaudo)), así que `pendienteTotal` por inmueble es solo lo que falta y `saldoAFavor`
+// lo que pagó de más: Σ pendiente - Σ saldo a favor = el pendiente del Consolidado cuando la etapa no queda en 0.
+async function obtenerDesgloseConsolidado() {
+  const { filas } = await obtenerCache();
+  const unidades = [];
+  for (const f of filas) {
+    if (f.etapa == null) continue;
+    const vendido = esVendido(f);
+    const base = {
+      etapa: f.etapa, frente: f.frente, torre: f.torre, unidad: f.unidad, nomenclatura: f.nomenclatura,
+      estado: vendido ? 'Vendida' : 'Disponible', estadoFiducia: f.estadoFiducia,
+      referencia: f.referencia, comprador: f.comprador,
+      valorUnidadDisponible: !vendido ? f.precioUnitario ?? null : null,
+    };
+    if (!vendido) { unidades.push(base); continue; }
+    const a = aporteFiducia(f);
+    const diferencia = a.venta - a.pagado;
+    const difCuotaInicial = a.cuotaInicial - a.pagadoCuotaInicial;
+    unidades.push({
+      ...base,
+      valorVenta: a.venta, cuotaInicial: a.cuotaInicial,
+      recaudado: a.pagado, recaudadoCuotaInicial: a.pagadoCuotaInicial, recaudadoCredito: a.pagado - a.pagadoCuotaInicial,
+      pendienteTotal: Math.max(0, diferencia), saldoAFavor: Math.max(0, -diferencia),
+      pendienteCuotaInicial: difCuotaInicial,
+      pendienteCredito: Math.max(0, diferencia) - difCuotaInicial,
+      montoEnMoraInicial: f.montoEnMoraInicial ?? 0, maxDiasAtrasoInicial: f.maxDiasAtrasoInicial ?? 0,
+    });
+  }
+  unidades.sort((x, y) => compararEtapas(x.etapa, y.etapa) || String(x.frente ?? '').localeCompare(String(y.frente ?? ''), 'es', { numeric: true }) || String(x.torre ?? '').localeCompare(String(y.torre ?? ''), 'es', { numeric: true }) || String(x.unidad ?? '').localeCompare(String(y.unidad ?? ''), 'es', { numeric: true }));
+  return { unidades, fechaCorte: new Date().toISOString() };
+}
+
 function mesKeyDeFecha(fecha) {
   return `${fecha.getUTCFullYear()}-${String(fecha.getUTCMonth() + 1).padStart(2, '0')}`;
 }
@@ -977,6 +1010,7 @@ module.exports = {
   obtenerResumenPorEtapa,
   obtenerMesesDisponiblesResumen,
   obtenerResumenCarteraMes,
+  obtenerDesgloseConsolidado,
   cerrarMesAnteriorSiFalta,
   obtenerStats,
   obtenerResumenStats,

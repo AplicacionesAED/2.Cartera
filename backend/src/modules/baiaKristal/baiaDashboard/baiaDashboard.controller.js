@@ -29,6 +29,8 @@ const resumenEtapas = asyncHandler(async (req, res) => {
   ok(res, resultado);
 });
 
+const desgloseConsolidado = asyncHandler(async (req, res) => ok(res, await service.obtenerDesgloseConsolidado()));
+
 const cerrarMes = asyncHandler(async (req, res) => ok(res, (await service.cerrarMesAnteriorSiFalta()) ?? { message: 'El mes anterior ya tenía una foto guardada' }));
 
-module.exports = { stats, resumenStats, dashboardRecaudo, carteraMora, mesesResumen, resumenEtapas, cerrarMes };
+module.exports = { stats, resumenStats, dashboardRecaudo, carteraMora, mesesResumen, resumenEtapas, desgloseConsolidado, cerrarMes };

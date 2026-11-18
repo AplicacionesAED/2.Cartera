@@ -14,6 +14,7 @@ router.get('/dashboard-recaudo', requireAuth, requireModulo(['dashboard', 'resum
 router.get('/cartera-mora', requireAuth, requireModulo('cartera-mora'), controller.carteraMora);
 router.get('/resumen-etapas/meses', requireAuth, requireModulo('resumen'), controller.mesesResumen);
 router.get('/resumen-etapas', requireAuth, requireModulo('resumen'), controller.resumenEtapas);
+router.get('/resumen-etapas/desglose', requireAuth, requireModulo('resumen'), controller.desgloseConsolidado);
 // Sin cron todavia (ver hoja de ruta) -- trigger manual para cerrar el mes
 // anterior mientras tanto.
 router.post('/resumen-etapas/cerrar-mes', requireAuth, requireAdmin, controller.cerrarMes);

@@ -34,7 +34,7 @@ import { Badge } from '../../components/ui/Badge.jsx';
 import { InfoTooltip } from '../../components/ui/InfoTooltip.jsx';
 import { useEstadoRetorno } from '../../hooks/useEstadoRetorno.js';
 import { useModoEnfocado } from '../../hooks/useModoEnfocado.js';
-import { getMesesResumen, getResumenEtapas, getDashboardRecaudo, getResumenStats } from '../../api/dashboard.js';
+import { getMesesResumen, getResumenEtapas, getDesgloseConsolidado, getDashboardRecaudo, getResumenStats } from '../../api/dashboard.js';
 import { etiquetaEtapa, compararEtapas } from '../../utils/etapas.js';
 import { EsperadoRecaudadoChart, fmtDia, fmtMes } from '../dashboard/charts/EsperadoRecaudadoChart.jsx';
 import { KpiMatriz } from './KpiMatriz.jsx';
@@ -446,7 +446,9 @@ export function ResumenPage() {
     if (!datos) return;
     setExportandoExcel(true);
     try {
-      await exportarConsolidadoExcel({ datos, columnas: COLUMNAS, grupos: GRUPOS, tonos: TONOS_EXCEL, etiquetaEtapa });
+      // El desglose por inmueble solo existe en vivo: los meses cerrados guardan únicamente los totales por etapa.
+      const unidades = datos.enVivo ? (await getDesgloseConsolidado()).data.unidades : null;
+      await exportarConsolidadoExcel({ datos, columnas: COLUMNAS, grupos: GRUPOS, tonos: TONOS_EXCEL, etiquetaEtapa, unidades });
     } catch (err) {
       setError(err.message);
     } finally {

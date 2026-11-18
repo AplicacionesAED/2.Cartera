@@ -4,7 +4,7 @@
 //
 // Nombre del archivo: "Consolidado Cartera - <Mes del consolidado> - exportado <AAAA-MM-DD>.xlsx" (igual que el PDF).
 import ExcelJS from 'exceljs';
-import { agregarHojasDesglose } from './desgloseExcel.js';
+import { agregarHojaConsolidadoDetallado } from './desgloseExcel.js';
 
 const EXCEL_BORDE_GRUPO = { left: { style: 'medium', color: { argb: 'FFC3CBD6' } } };
 const EXCEL_BG_TOTAL = 'FFEEF1F5';
@@ -31,6 +31,10 @@ export async function exportarConsolidadoExcel({
   const inicioDeGrupo = new Set(grupos.map((_, i) => columnas[grupos.slice(0, i).reduce((s, g) => s + g.span, 0)]?.key));
 
   const wb = new ExcelJS.Workbook();
+  if (unidades?.length) {
+    agregarHojaConsolidadoDetallado(wb, { datos, columnas, grupos, tonos, unidades, etiquetaEtapa });
+    return descargarLibro(wb, datos, prefijoArchivo);
+  }
   const ws = wb.addWorksheet('Consolidado');
 
   ws.getColumn(1).width = 30;
@@ -94,8 +98,10 @@ export async function exportarConsolidadoExcel({
 
   ws.views = [{ state: 'frozen', xSplit: 1, ySplit: 2 }];
 
-  if (unidades?.length) agregarHojasDesglose(wb, unidades, etiquetaEtapa);
+  await descargarLibro(wb, datos, prefijoArchivo);
+}
 
+async function descargarLibro(wb, datos, prefijoArchivo) {
   const buffer = await wb.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url = URL.createObjectURL(blob);

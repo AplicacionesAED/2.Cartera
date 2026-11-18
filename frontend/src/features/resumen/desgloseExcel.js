@@ -1,103 +1,172 @@
-// Hojas de desglose del Consolidado (una fila por inmueble, con la referencia de recaudo). Se agregan al mismo libro
-// del Consolidado. Los valores van como número en pesos completos (no en miles de millones) para poder filtrar y sumar.
+// Hoja única del Consolidado con desglose: por cada etapa su fila de resumen (las columnas del Consolidado) y debajo uno
+// por inmueble con las MISMAS columnas, más Frente/Torre/Unidad/Referencia de recaudo/Comprador. Todo en pesos completos
+// (número, no texto) para poder filtrar y sumar. Las filas de inmueble quedan agrupadas (se pueden plegar).
+//
+// Cada inmueble aporta por separado; el Consolidado netea por etapa (pendiente = max(0, ventas − recaudo)). Por eso la
+// última columna "Saldo a favor" trae lo que pagó de más cada negocio: Σ pendiente − Σ saldo a favor = pendiente de la etapa.
 const FORMATO_PESOS = '#,##0';
+const FORMATO_PCT = '0.0%';
+const EXCEL_BORDE_GRUPO = { left: { style: 'medium', color: { argb: 'FFC3CBD6' } } };
+const BG_TOTAL = 'FFEEF1F5';
 const fillSolida = (argb) => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
-const ENCABEZADO_BG = 'FFE8E9FD';
-const ENCABEZADO_INK = 'FF232BED';
-const TOTAL_BG = 'FFEEF1F5';
 
-const COLUMNAS_TODAS = [
-  { key: 'etapa', label: 'Etapa', ancho: 18 },
-  { key: 'frente', label: 'Frente', ancho: 16 },
-  { key: 'torre', label: 'Torre', ancho: 8 },
-  { key: 'unidad', label: 'Unidad', ancho: 10 },
-  { key: 'estado', label: 'Estado', ancho: 12 },
-  { key: 'referencia', label: 'Referencia de recaudo', ancho: 20 },
-  { key: 'comprador', label: 'Comprador', ancho: 34 },
-  { key: 'valorUnidadDisponible', label: 'Valor unidad disponible', dinero: true },
-  { key: 'valorVenta', label: 'Valor venta fiduciaria', dinero: true },
-  { key: 'cuotaInicial', label: 'Valor cuota inicial', dinero: true },
-  { key: 'recaudado', label: 'Recaudado a la fecha', dinero: true },
-  { key: 'recaudadoCuotaInicial', label: 'Recaudado cuota inicial', dinero: true },
-  { key: 'recaudadoCredito', label: 'Recaudado crédito', dinero: true },
-  { key: 'pendienteTotal', label: 'Pendiente por recaudar', dinero: true },
-  { key: 'saldoAFavor', label: 'Saldo a favor (pagó de más)', dinero: true },
-  { key: 'pendienteCuotaInicial', label: 'Cuota inicial por recaudar', dinero: true },
-  { key: 'pendienteCredito', label: 'Crédito por recaudar', dinero: true },
-  { key: 'montoEnMoraInicial', label: 'Mora cuota inicial', dinero: true },
-  { key: 'maxDiasAtrasoInicial', label: 'Días de atraso cuota inicial', ancho: 14 },
+const CLAVES_PCT = new Set(['pctRecaudoSobreVentasFiduciaria', 'pctRecaudoSobreCuotaInicial', 'pctCarteraMas5Dias']);
+const UMBRAL_CARTERA_DIAS = 5;
+
+const ID_COLUMNAS = [
+  { label: 'Etapa / Frente', ancho: 30 },
+  { label: 'Torre', ancho: 8 },
+  { label: 'Unidad', ancho: 10 },
+  { label: 'Referencia de recaudo', ancho: 20 },
+  { label: 'Comprador', ancho: 32 },
 ];
 
-function hojaTabla(wb, nombre, columnas, filas, { totales = [] } = {}) {
-  const ws = wb.addWorksheet(nombre);
-  columnas.forEach((c, i) => { ws.getColumn(i + 1).width = c.ancho ?? 22; });
-  const enc = ws.getRow(1);
-  columnas.forEach((c, i) => {
-    const cell = enc.getCell(i + 1);
-    cell.value = c.label;
-    cell.fill = fillSolida(ENCABEZADO_BG);
-    cell.font = { bold: true, color: { argb: ENCABEZADO_INK }, size: 10 };
-    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-  });
-  enc.height = 34;
-  filas.forEach((f, r) => {
-    const row = ws.getRow(r + 2);
-    columnas.forEach((c, i) => {
-      const cell = row.getCell(i + 1);
-      const v = f[c.key];
-      cell.value = v === undefined || v === '' ? null : v;
-      if (c.dinero) cell.numFmt = FORMATO_PESOS;
-    });
-  });
-  if (totales.length > 0 && filas.length > 0) {
-    // Una fila en blanco antes del total: así el filtro y el orden de Excel no lo mezclan con los datos.
-    const row = ws.getRow(filas.length + 3);
-    row.getCell(1).value = 'TOTAL (de lo filtrado)';
-    columnas.forEach((c, i) => {
-      if (!totales.includes(c.key)) return;
-      const letra = ws.getColumn(i + 1).letter;
-      const cell = row.getCell(i + 1);
-      cell.value = { formula: `SUBTOTAL(109,${letra}2:${letra}${filas.length + 1})` };
-      cell.numFmt = FORMATO_PESOS;
-    });
-    row.eachCell({ includeEmpty: true }, (cell) => { cell.font = { bold: true }; cell.fill = fillSolida(TOTAL_BG); });
+// Valor de cada columna del Consolidado para un inmueble (mismas definiciones, a nivel de un solo inmueble).
+function valorInmueble(key, u) {
+  const vendida = u.estado === 'Vendida';
+  switch (key) {
+    case 'uniTotales': return 1;
+    case 'uniVendidasFidu': return vendida ? 1 : 0;
+    case 'uniDisponible': return vendida ? 0 : 1;
+    case 'valorTotalUnidadesDisponibles': return vendida ? null : u.valorUnidadDisponible ?? 0;
+    case 'valorTotalVentasFiduciaria': return vendida ? u.valorVenta : null;
+    case 'valorCuotasIniciales': return vendida ? u.cuotaInicial : null;
+    case 'valorTotalVenta': return vendida ? u.valorVenta : u.valorUnidadDisponible ?? 0;
+    case 'recaudoReal': return vendida ? u.recaudado : null;
+    case 'recaudoCuotaInicial': return vendida ? u.recaudadoCuotaInicial : null;
+    case 'recaudoCredito': return vendida ? u.recaudadoCredito : null;
+    case 'pctRecaudoSobreVentasFiduciaria': return vendida && u.valorVenta > 0 ? u.recaudado / u.valorVenta : null;
+    case 'pctRecaudoSobreCuotaInicial': return vendida && u.cuotaInicial > 0 ? u.recaudadoCuotaInicial / u.cuotaInicial : null;
+    case 'pendienteTotalFiduciaria': return vendida ? u.pendienteTotal : null;
+    case 'pendienteCuotaInicial': return vendida ? u.pendienteCuotaInicial : null;
+    case 'pendienteCredito': return vendida ? Math.max(0, u.pendienteCredito) : null;
+    case 'carteraMas5Dias': return vendida ? ((u.maxDiasAtrasoInicial ?? 0) > UMBRAL_CARTERA_DIAS ? u.montoEnMoraInicial ?? 0 : 0) : null;
+    default: return null; // % cartera y fecha de corte solo existen por etapa
   }
-  ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: columnas.length } };
-  ws.views = [{ state: 'frozen', xSplit: 4, ySplit: 1 }];
-  return ws;
 }
 
-export function agregarHojasDesglose(wb, unidades, etiquetaEtapa) {
-  const filas = unidades.map((u) => ({ ...u, etapa: etiquetaEtapa(u.etapa), torre: u.torre == null ? null : String(u.torre) }));
-  const montos = COLUMNAS_TODAS.filter((c) => c.dinero).map((c) => c.key);
+function valorResumen(key, fila) {
+  if (key === 'fechaCorte') return fila.fechaCorte ? new Date(fila.fechaCorte).toLocaleDateString('es-CO') : null;
+  const v = fila[key];
+  return v == null || isNaN(v) ? null : v;
+}
 
-  hojaTabla(wb, 'Todas las unidades', COLUMNAS_TODAS, filas, { totales: montos });
+// Unidades y pesos comparten el formato con separador de miles.
+const formatoDe = (key) => (CLAVES_PCT.has(key) ? FORMATO_PCT : FORMATO_PESOS);
 
-  const disponibles = filas.filter((u) => u.estado === 'Disponible');
-  hojaTabla(wb, 'Unidades disponibles', COLUMNAS_TODAS.filter((c) => ['etapa', 'frente', 'torre', 'unidad', 'valorUnidadDisponible'].includes(c.key)), disponibles, { totales: ['valorUnidadDisponible'] });
+export function agregarHojaConsolidadoDetallado(wb, { datos, columnas, grupos, tonos, unidades, etiquetaEtapa }) {
+  const ws = wb.addWorksheet('Consolidado');
+  const nId = ID_COLUMNAS.length;
+  const colFavor = nId + columnas.length + 1;
+  const inicioDeGrupo = new Set(grupos.map((_, i) => columnas[grupos.slice(0, i).reduce((s, g) => s + g.span, 0)]?.key));
 
-  const columnasVendidas = COLUMNAS_TODAS.filter((c) => c.key !== 'valorUnidadDisponible' && c.key !== 'estado');
-  const vendidas = filas.filter((u) => u.estado === 'Vendida');
-  hojaTabla(wb, 'Cuotas iniciales', columnasVendidas.filter((c) => !['pendienteTotal', 'saldoAFavor', 'pendienteCredito', 'recaudadoCredito'].includes(c.key)), vendidas.filter((u) => (u.cuotaInicial ?? 0) > 0), { totales: ['cuotaInicial', 'recaudado', 'recaudadoCuotaInicial', 'pendienteCuotaInicial', 'montoEnMoraInicial'] });
+  ID_COLUMNAS.forEach((c, i) => { ws.getColumn(i + 1).width = c.ancho; });
+  columnas.forEach((_, i) => { ws.getColumn(nId + i + 1).width = 20; });
+  ws.getColumn(colFavor).width = 22;
 
-  const pendientes = vendidas.filter((u) => (u.pendienteTotal ?? 0) > 0).sort((a, b) => b.pendienteTotal - a.pendienteTotal);
-  hojaTabla(wb, 'Pendiente por recaudar', columnasVendidas.filter((c) => !['saldoAFavor', 'recaudadoCredito'].includes(c.key)), pendientes, { totales: ['valorVenta', 'cuotaInicial', 'recaudado', 'pendienteTotal', 'pendienteCuotaInicial', 'pendienteCredito', 'montoEnMoraInicial'] });
+  // Encabezados: fila 1 = grupos, fila 2 = columnas (igual que el Consolidado).
+  ws.mergeCells(1, 1, 2, 1);
+  const primera = ws.getCell(1, 1);
+  primera.value = ID_COLUMNAS[0].label;
+  primera.font = { bold: true };
+  primera.alignment = { vertical: 'middle', horizontal: 'left' };
+  ID_COLUMNAS.slice(1).forEach((c, i) => {
+    ws.mergeCells(1, i + 2, 2, i + 2);
+    const cell = ws.getCell(1, i + 2);
+    cell.value = c.label;
+    cell.font = { bold: true };
+    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+  });
 
-  // Por etapa: lo que falta de los que deben menos lo que pagaron de más = el pendiente del Consolidado (si no queda en 0).
-  const porEtapa = [];
-  for (const u of filas.filter((x) => x.estado === 'Vendida')) {
-    let e = porEtapa.find((x) => x.etapa === u.etapa);
-    if (!e) { e = { etapa: u.etapa, deben: 0, pendiente: 0, favor: 0, saldoFavor: 0, neto: 0 }; porEtapa.push(e); }
-    if ((u.pendienteTotal ?? 0) > 0) { e.deben += 1; e.pendiente += u.pendienteTotal; }
-    if ((u.saldoAFavor ?? 0) > 0) { e.favor += 1; e.saldoFavor += u.saldoAFavor; }
+  let cursor = nId + 1;
+  grupos.forEach((g) => {
+    const inicio = cursor;
+    const fin = cursor + g.span - 1;
+    if (fin > inicio) ws.mergeCells(1, inicio, 1, fin);
+    const cell = ws.getCell(1, inicio);
+    cell.value = g.label.toUpperCase();
+    cell.fill = fillSolida(tonos[g.tono].bg);
+    cell.font = { bold: true, color: { argb: tonos[g.tono].ink } };
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+    cursor = fin + 1;
+  });
+  columnas.forEach((col, i) => {
+    const g = grupos[col.grupo];
+    const cell = ws.getCell(2, nId + i + 1);
+    cell.value = col.label;
+    cell.fill = fillSolida(tonos[g.tono].bg);
+    cell.font = { bold: true, color: { argb: tonos[g.tono].ink }, size: 10 };
+    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    if (inicioDeGrupo.has(col.key)) cell.border = EXCEL_BORDE_GRUPO;
+  });
+  ws.mergeCells(1, colFavor, 2, colFavor);
+  const hFavor = ws.getCell(1, colFavor);
+  hFavor.value = 'Saldo a favor (pagó de más)';
+  hFavor.font = { bold: true, size: 10 };
+  hFavor.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+  ws.getRow(1).height = 20;
+  ws.getRow(2).height = 34;
+
+  const porEtapa = new Map();
+  for (const u of unidades) {
+    if (!porEtapa.has(u.etapa)) porEtapa.set(u.etapa, []);
+    porEtapa.get(u.etapa).push(u);
   }
-  porEtapa.forEach((e) => { e.neto = Math.max(0, e.pendiente - e.saldoFavor); });
-  hojaTabla(wb, 'Conciliación pendiente', [
-    { key: 'etapa', label: 'Etapa', ancho: 18 },
-    { key: 'deben', label: 'Negocios que deben', ancho: 14 },
-    { key: 'pendiente', label: 'Suma de lo que deben', dinero: true },
-    { key: 'favor', label: 'Negocios con saldo a favor', ancho: 14 },
-    { key: 'saldoFavor', label: 'Suma de saldos a favor', dinero: true },
-    { key: 'neto', label: 'Pendiente del Consolidado (deben − saldos a favor)', dinero: true, ancho: 30 },
-  ], porEtapa, { totales: ['deben', 'pendiente', 'favor', 'saldoFavor', 'neto'] });
+
+  let r = 3;
+  const escribirFila = (fila, { etiqueta, esResumen, esTotal, inmueble, valorColumna, favor }) => {
+    const row = ws.getRow(r++);
+    const c1 = row.getCell(1);
+    c1.value = etiqueta;
+    if (esResumen || esTotal) c1.font = { bold: true };
+    if (inmueble) {
+      c1.alignment = { indent: 1 };
+      row.getCell(2).value = inmueble.torre == null ? null : String(inmueble.torre);
+      row.getCell(3).value = inmueble.unidad ?? null;
+      row.getCell(4).value = inmueble.referencia ?? null;
+      row.getCell(5).value = inmueble.comprador ?? null;
+      row.outlineLevel = 1;
+    }
+    columnas.forEach((col, i) => {
+      const g = grupos[col.grupo];
+      const cell = row.getCell(nId + i + 1);
+      cell.value = valorColumna(col.key);
+      cell.numFmt = formatoDe(col.key);
+      cell.alignment = { horizontal: 'right' };
+      if (esTotal) { cell.fill = fillSolida(BG_TOTAL); cell.font = { bold: true }; }
+      else if (esResumen) { cell.fill = fillSolida(tonos[g.tono].bg); cell.font = { bold: true, color: { argb: tonos[g.tono].ink } }; }
+      if (inicioDeGrupo.has(col.key)) cell.border = EXCEL_BORDE_GRUPO;
+    });
+    const cf = row.getCell(colFavor);
+    cf.value = favor;
+    cf.numFmt = FORMATO_PESOS;
+    cf.alignment = { horizontal: 'right' };
+    if (esTotal) { for (let k = 1; k <= colFavor; k++) { const c = row.getCell(k); c.fill = fillSolida(BG_TOTAL); c.font = { bold: true }; } }
+    else if (esResumen) { for (let k = 1; k <= nId; k++) row.getCell(k).fill = fillSolida(BG_TOTAL); cf.font = { bold: true }; }
+  };
+
+  for (const fila of datos.etapas) {
+    const lista = porEtapa.get(fila.etapa) ?? [];
+    escribirFila(fila, {
+      etiqueta: etiquetaEtapa(fila.etapa), esResumen: true,
+      valorColumna: (key) => valorResumen(key, fila),
+      favor: lista.reduce((s, u) => s + (u.saldoAFavor ?? 0), 0),
+    });
+    for (const u of lista) {
+      escribirFila(u, {
+        etiqueta: u.frente ?? '', inmueble: u,
+        valorColumna: (key) => valorInmueble(key, u),
+        favor: u.estado === 'Vendida' ? u.saldoAFavor : null,
+      });
+    }
+  }
+  escribirFila(datos.total, {
+    etiqueta: 'TOTAL GENERAL', esTotal: true,
+    valorColumna: (key) => valorResumen(key, datos.total),
+    favor: unidades.reduce((s, u) => s + (u.saldoAFavor ?? 0), 0),
+  });
+
+  ws.properties.outlineProperties = { summaryBelow: false };
+  ws.views = [{ state: 'frozen', xSplit: 1, ySplit: 2 }];
+  return ws;
 }

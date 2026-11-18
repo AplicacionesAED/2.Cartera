@@ -6,12 +6,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Hourglass, Wallet, Banknote, Layers, AlertOctagon, AlertTriangle, Info, CheckCircle2,
+  Wallet, AlertOctagon, AlertTriangle, Info, CheckCircle2,
   ChevronRight, RefreshCw, FileText, Building2, Briefcase, Warehouse, Landmark, ArrowLeftRight,
   BarChart3, LayoutDashboard, Target,
 } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext.jsx';
-import { StatTile } from '../dashboard/StatTile.jsx';
 import { usePersistentState } from '../../hooks/usePersistentState.js';
 import { tienePermiso } from '../../utils/permisos.js';
 import { formatCOP, formatDateTime } from '../../utils/format.js';
@@ -19,13 +18,6 @@ import { getInicio } from '../../api/inicio.js';
 import { ACCESOS_RAPIDOS } from './accesosRapidos.js';
 import dashStyles from '../dashboard/Dashboard.module.css';
 import styles from './Inicio.module.css';
-
-const ICONOS_KPI = {
-  porRecaudar: { icon: Hourglass, tone: 'neutral' },
-  recaudadoMes: { icon: Wallet, tone: 'success' },
-  montoMora: { icon: Banknote, tone: 'warning' },
-  cuotasMora: { icon: Layers, tone: 'neutral' },
-};
 
 const ICONOS_ALERTA = { danger: AlertOctagon, warning: AlertTriangle, info: Info };
 
@@ -67,14 +59,16 @@ function Alertas({ alertas }) {
   return (
     <section className={styles.panel}>
       <header className={styles.panelHeader}>
-        <h2 className={styles.panelTitulo}>Alertas</h2>
+        <h2 className={styles.panelTitulo}>Requiere tu atención</h2>
         {alertas.length > 0 && <span className={styles.contador}>{alertas.length}</span>}
       </header>
       {alertas.length === 0 ? (
         <div className={styles.alDia}>
-          <span className={styles.alDiaIcono}><CheckCircle2 size={22} /></span>
-          <p className={styles.alDiaTitulo}>Estás al día</p>
-          <p className={styles.alDiaTexto}>No hay alertas pendientes para este proyecto.</p>
+          <span className={styles.alDiaIcono}><CheckCircle2 size={20} /></span>
+          <div className={styles.alDiaCuerpo}>
+            <p className={styles.alDiaTitulo}>Estás al día</p>
+            <p className={styles.alDiaTexto}>No hay alertas pendientes para este proyecto.</p>
+          </div>
         </div>
       ) : (
         <ul className={styles.listaAlertas}>
@@ -163,33 +157,56 @@ export function InicioPage() {
   const primerNombre = (usuario?.nombre ?? '').split(' ')[0];
   const hoy = new Intl.DateTimeFormat('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Bogota' }).format(new Date());
 
+  const nAlertas = actual?.alertas.length ?? 0;
+  const nCriticas = actual?.alertas.filter((a) => a.tipo === 'danger').length ?? 0;
+  const frase = !actual
+    ? 'Cargando tu resumen…'
+    : nAlertas === 0
+      ? 'Estás al día: no hay alertas pendientes.'
+      : `Hay ${nAlertas} ${nAlertas === 1 ? 'alerta pendiente' : 'alertas pendientes'}${nCriticas > 0 ? `, ${nCriticas} ${nCriticas === 1 ? 'crítica' : 'críticas'}` : ''}.`;
+
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <div className={dashStyles.headerText}>
-          <h1 className={dashStyles.title}>{saludo()}{primerNombre ? `, ${primerNombre}` : ''}</h1>
-          <p className={`${dashStyles.subtitle} ${styles.fecha}`}>{hoy}</p>
+      <header className={styles.hero}>
+        <div className={styles.heroTop}>
+          <div className={styles.heroTexto}>
+            <h1 className={styles.heroTitulo}>{saludo()}{primerNombre ? `, ${primerNombre}` : ''}</h1>
+            <p className={styles.heroFrase}>{datos && !actual ? 'Sin acceso a módulos de cartera.' : frase}</p>
+            <p className={styles.heroFecha}>{hoy}</p>
+          </div>
+          <div className={styles.headerLado}>
+            {actual && <ChipSync sync={actual.sync} />}
+            {disponibles.length > 1 && (
+              <div className={styles.heroToggle} role="tablist" aria-label="Proyecto">
+                {disponibles.map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    role="tab"
+                    aria-selected={activo === k}
+                    className={`${styles.heroToggleBtn} ${activo === k ? styles.heroToggleBtnActivo : ''}`}
+                    onClick={() => setProyecto(k)}
+                  >
+                    {datos[k].nombre}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-        <div className={styles.headerLado}>
-          {actual && <ChipSync sync={actual.sync} />}
-          {disponibles.length > 1 && (
-            <div className={dashStyles.toggleGroup} role="tablist" aria-label="Proyecto">
-              {disponibles.map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  role="tab"
-                  aria-selected={activo === k}
-                  className={`${dashStyles.toggleButton} ${activo === k ? dashStyles.toggleButtonActive : ''}`}
-                  onClick={() => setProyecto(k)}
-                >
-                  {datos[k].nombre}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+
+        {actual && actual.kpis.length > 0 && (
+          <dl className={styles.cifras}>
+            {actual.kpis.map((kpi) => (
+              <Link key={kpi.key} to={kpi.to} className={styles.cifra}>
+                <dd className={`${styles.cifraValor} ${Number(kpi.valor) === 0 ? styles.cifraCero : ''} ${kpi.advertencia ? styles.cifraAlerta : ''}`}>{formatearValor(kpi)}</dd>
+                <dt className={styles.cifraLabel}>{kpi.label}</dt>
+                {kpi.sub && <span className={styles.cifraSub}>{kpi.sub}</span>}
+              </Link>
+            ))}
+          </dl>
+        )}
+      </header>
 
       {error && <div className={dashStyles.formError}>{error}</div>}
 
@@ -206,19 +223,6 @@ export function InicioPage() {
 
       {actual && (
         <>
-          {actual.kpis.length > 0 && (
-            <div className={dashStyles.statsGrid}>
-              {actual.kpis.map((kpi) => {
-                const cfg = ICONOS_KPI[kpi.key] ?? { icon: Layers, tone: 'neutral' };
-                return (
-                  <Link key={kpi.key} to={kpi.to} className={styles.kpiLink}>
-                    <StatTile label={kpi.label} value={formatearValor(kpi)} sub={kpi.sub} icon={cfg.icon} tone={cfg.tone} warning={kpi.advertencia} />
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-
           <div className={styles.cuerpo}>
             <Alertas alertas={actual.alertas} />
             {grupo && <AccesosRapidos grupo={grupo} usuario={usuario} />}

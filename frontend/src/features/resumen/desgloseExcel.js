@@ -6,7 +6,8 @@
 // última columna "Saldo a favor" trae lo que pagó de más cada negocio: Σ pendiente − Σ saldo a favor = pendiente de la etapa.
 const FORMATO_PESOS = '#,##0';
 const FORMATO_UNIDADES = '#,##0';
-const FORMATO_DINERO = '"$" #,##0';
+// Dinero igual que en pantalla: miles de millones con 3 decimales (el número guardado es el valor real en esa unidad).
+const FORMATO_DINERO = '"$" #,##0.000';
 const FORMATO_FECHA = 'dd/mm/yyyy';
 const FORMATO_PCT = '0.0%';
 const EXCEL_BORDE_GRUPO = { left: { style: 'medium', color: { argb: 'FFC3CBD6' } } };
@@ -48,10 +49,13 @@ function valorInmueble(key, u) {
   }
 }
 
+const esDinero = (key) => !CLAVES_PCT.has(key) && !CLAVES_UNIDADES.has(key) && key !== 'fechaCorte';
+export const aMM = (key, v) => (v == null || !esDinero(key) ? v : v / 1_000_000_000);
+
 export function valorResumen(key, fila) {
   if (key === 'fechaCorte') return fila.fechaCorte ? new Date(fila.fechaCorte) : null;
   const v = fila[key];
-  return v == null || isNaN(v) ? null : v;
+  return v == null || isNaN(v) ? null : aMM(key, v);
 }
 
 // Cada columna con su formato real: unidades = entero, % = porcentaje, fecha = fecha, el resto = dinero.
@@ -191,14 +195,14 @@ export function agregarHojaConsolidadoDetallado(wb, { datos, columnas, grupos, t
     escribirFila(fila, {
       etiqueta: etiquetaEtapa(fila.etapa), esResumen: true,
       valorColumna: (key) => valorResumen(key, fila),
-      favor: lista.reduce((s, u) => s + (u.saldoAFavor ?? 0), 0),
+      favor: lista.reduce((s, u) => s + (u.saldoAFavor ?? 0), 0) / 1_000_000_000,
       extras: extrasAgregado(lista),
     });
     for (const u of lista) {
       escribirFila(u, {
         etiqueta: u.frente ?? '', inmueble: u,
-        valorColumna: (key) => valorInmueble(key, u),
-        favor: u.estado === 'Vendida' ? u.saldoAFavor : null,
+        valorColumna: (key) => aMM(key, valorInmueble(key, u)),
+        favor: u.estado === 'Vendida' ? u.saldoAFavor / 1_000_000_000 : null,
         extras: extrasInmueble(u),
       });
     }
@@ -206,7 +210,7 @@ export function agregarHojaConsolidadoDetallado(wb, { datos, columnas, grupos, t
   escribirFila(datos.total, {
     etiqueta: 'TOTAL GENERAL', esTotal: true,
     valorColumna: (key) => valorResumen(key, datos.total),
-    favor: unidades.reduce((s, u) => s + (u.saldoAFavor ?? 0), 0),
+    favor: unidades.reduce((s, u) => s + (u.saldoAFavor ?? 0), 0) / 1_000_000_000,
     extras: extrasAgregado(unidades),
   });
 

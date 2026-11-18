@@ -143,6 +143,9 @@ async function construirFilasCompletas() {
     let maxDiasAtrasoInicial = 0;
     let esperadoAFechaInicial = null;
     let esperadoAFecha = null;
+    let fechaLimiteVencidaMasAntigua = null; // fecha límite de la cuota vencida sin pagar más antigua
+    let maxDiasAtrasoAlPagar = null; // mayor atraso (días) con que se cubrió una cuota ya pagada: fecha del pago − fecha límite
+    let cuotasPagadasConAtraso = null;
     let saldoContraentregaVencido = false;
     let pendienteSaldoContraentrega = null;
     let diasAtrasoSaldoContraentrega = null;
@@ -211,6 +214,15 @@ async function construirFilasCompletas() {
       montoEnMoraInicial = enMoraInicial.reduce((s, c) => s + (c.valorPlan - c.cubierto), 0);
       maxDiasAtrasoInicial = enMoraInicial.length > 0 ? Math.max(...enMoraInicial.map((c) => c.diasAtraso ?? 0)) : 0;
       esperadoAFechaInicial = cuotasCuotaInicial.filter((c) => c.fechaEstimada && c.fechaEstimada <= hoy).reduce((s, c) => s + c.valorPlan, 0);
+
+      const vencidas = cuotas.filter((c) => c.atrasada);
+      if (vencidas.length > 0) fechaLimiteVencidaMasAntigua = vencidas.reduce((min, c) => (c.fechaEstimada < min ? c.fechaEstimada : min), vencidas[0].fechaEstimada);
+      const atrasosAlPagar = cuotas
+        .filter((c) => c.estado === 'pagada' && c.fechaEstimada && c.fechaCubierta)
+        .map((c) => Math.floor((c.fechaCubierta.getTime() - c.fechaEstimada.getTime()) / 86400000))
+        .filter((d) => d > 0);
+      cuotasPagadasConAtraso = atrasosAlPagar.length;
+      maxDiasAtrasoAlPagar = atrasosAlPagar.length > 0 ? Math.max(...atrasosAlPagar) : 0;
 
       const sce = cuotaSaldo;
       if (sce?.atrasada) {
@@ -317,6 +329,9 @@ async function construirFilasCompletas() {
       saldoContraentregaVencido,
       pendienteSaldoContraentrega,
       diasAtrasoSaldoContraentrega,
+      fechaLimiteVencidaMasAntigua,
+      maxDiasAtrasoAlPagar,
+      cuotasPagadasConAtraso,
       negocioId: negocio?.id ?? null,
       referencia: negocio?.referencia ?? null,
       comprador: negocio?.compradores?.[0]?.nombre ?? null,
@@ -855,6 +870,11 @@ async function obtenerDesgloseConsolidado() {
       pendienteCuotaInicial: difCuotaInicial,
       pendienteCredito: Math.max(0, diferencia) - difCuotaInicial,
       montoEnMoraInicial: f.montoEnMoraInicial ?? 0, maxDiasAtrasoInicial: f.maxDiasAtrasoInicial ?? 0,
+      // Vencimiento por cliente: lo que sigue sin pagar (fecha límite más antigua, valor y días vencidos hoy) y qué tan
+      // tarde pagó lo ya pagado (fecha del pago − fecha límite de la cuota).
+      valorVencido: f.montoEnMora ?? 0, diasVencimientoActual: f.maxDiasAtraso ?? 0,
+      fechaLimiteVencidaMasAntigua: f.fechaLimiteVencidaMasAntigua ? new Date(f.fechaLimiteVencidaMasAntigua).toISOString().slice(0, 10) : null,
+      maxDiasAtrasoAlPagar: f.maxDiasAtrasoAlPagar, cuotasPagadasConAtraso: f.cuotasPagadasConAtraso,
     });
   }
   unidades.sort((x, y) => compararEtapas(x.etapa, y.etapa) || String(x.frente ?? '').localeCompare(String(y.frente ?? ''), 'es', { numeric: true }) || String(x.torre ?? '').localeCompare(String(y.torre ?? ''), 'es', { numeric: true }) || String(x.unidad ?? '').localeCompare(String(y.unidad ?? ''), 'es', { numeric: true }));

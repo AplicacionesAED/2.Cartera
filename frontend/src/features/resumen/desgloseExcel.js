@@ -54,6 +54,25 @@ function valorResumen(key, fila) {
 // Unidades y pesos comparten el formato con separador de miles.
 const formatoDe = (key) => (CLAVES_PCT.has(key) ? FORMATO_PCT : FORMATO_PESOS);
 
+// Vencimiento por cliente (después de "Saldo a favor"): qué sigue sin pagar y qué tan tarde pagó lo pagado.
+const EXTRA_COLUMNAS = [
+  { label: 'Fecha límite vencida más antigua (sin pagar)', fmt: 'dd/mm/yyyy', ancho: 22 },
+  { label: 'Días de vencimiento actual (sin pagar)', fmt: FORMATO_PESOS, ancho: 18 },
+  { label: 'Valor vencido', fmt: FORMATO_PESOS, ancho: 20 },
+  { label: 'Máx. días de atraso al pagar (fecha del pago − fecha límite)', fmt: FORMATO_PESOS, ancho: 24 },
+  { label: 'Cuotas pagadas con atraso', fmt: FORMATO_PESOS, ancho: 16 },
+];
+const fechaUtc = (iso) => (iso ? new Date(`${iso}T00:00:00Z`) : null);
+function extrasInmueble(u) {
+  if (u.estado !== 'Vendida') return EXTRA_COLUMNAS.map(() => null);
+  return [fechaUtc(u.fechaLimiteVencidaMasAntigua), u.diasVencimientoActual, u.valorVencido, u.maxDiasAtrasoAlPagar, u.cuotasPagadasConAtraso];
+}
+// Fila de etapa o total: sin fecha; días = el mayor; valor y cuotas = suma.
+function extrasAgregado(lista) {
+  const v = lista.filter((u) => u.estado === 'Vendida');
+  return [null, Math.max(0, ...v.map((u) => u.diasVencimientoActual ?? 0)), v.reduce((a, u) => a + (u.valorVencido ?? 0), 0), Math.max(0, ...v.map((u) => u.maxDiasAtrasoAlPagar ?? 0)), v.reduce((a, u) => a + (u.cuotasPagadasConAtraso ?? 0), 0)];
+}
+
 export function agregarHojaConsolidadoDetallado(wb, { datos, columnas, grupos, tonos, unidades, etiquetaEtapa }) {
   const ws = wb.addWorksheet('Consolidado');
   const nId = ID_COLUMNAS.length;
@@ -63,6 +82,7 @@ export function agregarHojaConsolidadoDetallado(wb, { datos, columnas, grupos, t
   ID_COLUMNAS.forEach((c, i) => { ws.getColumn(i + 1).width = c.ancho; });
   columnas.forEach((_, i) => { ws.getColumn(nId + i + 1).width = 20; });
   ws.getColumn(colFavor).width = 22;
+  EXTRA_COLUMNAS.forEach((c, i) => { ws.getColumn(colFavor + 1 + i).width = c.ancho; });
 
   // Encabezados: fila 1 = grupos, fila 2 = columnas (igual que el Consolidado).
   ws.mergeCells(1, 1, 2, 1);
@@ -104,8 +124,15 @@ export function agregarHojaConsolidadoDetallado(wb, { datos, columnas, grupos, t
   hFavor.value = 'Saldo a favor (pagó de más)';
   hFavor.font = { bold: true, size: 10 };
   hFavor.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+  EXTRA_COLUMNAS.forEach((c, i) => {
+    ws.mergeCells(1, colFavor + 1 + i, 2, colFavor + 1 + i);
+    const h = ws.getCell(1, colFavor + 1 + i);
+    h.value = c.label;
+    h.font = { bold: true, size: 10 };
+    h.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+  });
   ws.getRow(1).height = 20;
-  ws.getRow(2).height = 34;
+  ws.getRow(2).height = 48;
 
   const porEtapa = new Map();
   for (const u of unidades) {
@@ -114,7 +141,7 @@ export function agregarHojaConsolidadoDetallado(wb, { datos, columnas, grupos, t
   }
 
   let r = 3;
-  const escribirFila = (fila, { etiqueta, esResumen, esTotal, inmueble, valorColumna, favor }) => {
+  const escribirFila = (fila, { etiqueta, esResumen, esTotal, inmueble, valorColumna, favor, extras }) => {
     const row = ws.getRow(r++);
     const c1 = row.getCell(1);
     c1.value = etiqueta;
@@ -141,7 +168,15 @@ export function agregarHojaConsolidadoDetallado(wb, { datos, columnas, grupos, t
     cf.value = favor;
     cf.numFmt = FORMATO_PESOS;
     cf.alignment = { horizontal: 'right' };
-    if (esTotal) { for (let k = 1; k <= colFavor; k++) { const c = row.getCell(k); c.fill = fillSolida(BG_TOTAL); c.font = { bold: true }; } }
+    extras.forEach((v, i) => {
+      const ce = row.getCell(colFavor + 1 + i);
+      ce.value = v;
+      ce.numFmt = EXTRA_COLUMNAS[i].fmt;
+      ce.alignment = { horizontal: 'right' };
+      if (esResumen) ce.font = { bold: true };
+    });
+    const ultima = colFavor + EXTRA_COLUMNAS.length;
+    if (esTotal) { for (let k = 1; k <= ultima; k++) { const c = row.getCell(k); c.fill = fillSolida(BG_TOTAL); c.font = { bold: true }; } }
     else if (esResumen) { for (let k = 1; k <= nId; k++) row.getCell(k).fill = fillSolida(BG_TOTAL); cf.font = { bold: true }; }
   };
 
@@ -151,12 +186,14 @@ export function agregarHojaConsolidadoDetallado(wb, { datos, columnas, grupos, t
       etiqueta: etiquetaEtapa(fila.etapa), esResumen: true,
       valorColumna: (key) => valorResumen(key, fila),
       favor: lista.reduce((s, u) => s + (u.saldoAFavor ?? 0), 0),
+      extras: extrasAgregado(lista),
     });
     for (const u of lista) {
       escribirFila(u, {
         etiqueta: u.frente ?? '', inmueble: u,
         valorColumna: (key) => valorInmueble(key, u),
         favor: u.estado === 'Vendida' ? u.saldoAFavor : null,
+        extras: extrasInmueble(u),
       });
     }
   }
@@ -164,6 +201,7 @@ export function agregarHojaConsolidadoDetallado(wb, { datos, columnas, grupos, t
     etiqueta: 'TOTAL GENERAL', esTotal: true,
     valorColumna: (key) => valorResumen(key, datos.total),
     favor: unidades.reduce((s, u) => s + (u.saldoAFavor ?? 0), 0),
+    extras: extrasAgregado(unidades),
   });
 
   ws.properties.outlineProperties = { summaryBelow: false };

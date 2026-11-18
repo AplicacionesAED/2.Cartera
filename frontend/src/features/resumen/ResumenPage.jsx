@@ -29,7 +29,6 @@ import { SelectorAnio } from '../../components/ui/SelectorAnio.jsx';
 import { MultiSelect } from '../../components/ui/MultiSelect.jsx';
 import { frentesDisponibles as frentesDisponiblesCascada, torresDisponibles, podarSeleccion } from '../../utils/cascadaFiltros.js';
 import { Button } from '../../components/ui/Button.jsx';
-import { SyncModoButton, FORMATOS_EXPORTAR_CONSOLIDADO } from '../../components/SyncModoButton.jsx';
 import { Badge } from '../../components/ui/Badge.jsx';
 import { InfoTooltip } from '../../components/ui/InfoTooltip.jsx';
 import { useEstadoRetorno } from '../../hooks/useEstadoRetorno.js';
@@ -257,7 +256,6 @@ export function ResumenPage() {
   const [error, setError] = useState(null);
   const [exportandoPdf, setExportandoPdf] = useState(false);
   const [exportandoExcel, setExportandoExcel] = useState(false);
-  const [formatoExport, setFormatoExport] = useState('xlsx');
 
   // KPIs + tendencia (mismo backend que Dashboard Plan vs. Recaudo)
   const [planRecaudo, setPlanRecaudo] = useState(null);
@@ -442,12 +440,12 @@ export function ResumenPage() {
   }
 
   // Excel del consolidado del mes que se está viendo (mismas columnas, valores y colores que el PDF).
-  async function handleExportConsolidadoExcel() {
+  async function handleExportConsolidadoExcel(detallado) {
     if (!datos) return;
     setExportandoExcel(true);
     try {
-      // El desglose por inmueble solo existe en vivo: los meses cerrados guardan únicamente los totales por etapa.
-      const unidades = datos.enVivo ? (await getDesgloseConsolidado()).data.unidades : null;
+      // El detallado (una fila por inmueble) solo existe en vivo: los meses cerrados guardan únicamente los totales por etapa.
+      const unidades = detallado && datos.enVivo ? (await getDesgloseConsolidado()).data.unidades : null;
       await exportarConsolidadoExcel({ datos, columnas: COLUMNAS, grupos: GRUPOS, tonos: TONOS_EXCEL, etiquetaEtapa, unidades });
     } catch (err) {
       setError(err.message);
@@ -569,15 +567,20 @@ export function ResumenPage() {
               />
             </div>
             {datos?.enVivo && <Badge variant="info">En vivo</Badge>}
-            <SyncModoButton
-              opciones={FORMATOS_EXPORTAR_CONSOLIDADO}
-              modo={formatoExport}
-              onModo={setFormatoExport}
-              onEjecutar={(fmt) => (fmt === 'xlsx' ? handleExportConsolidadoExcel() : handleExportConsolidadoPdf())}
-              disabled={!datos || exportandoExcel || exportandoPdf}
-              Icono={Download}
-              ariaLabelFlecha="Elegir formato de exportación"
-            />
+            <Button variant="secondary" onClick={() => handleExportConsolidadoExcel(false)} disabled={!datos || exportandoExcel || exportandoPdf}>
+              <Download size={14} aria-hidden="true" /> Descargar consolidado Excel
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => handleExportConsolidadoExcel(true)}
+              disabled={!datos?.enVivo || exportandoExcel || exportandoPdf}
+              title={datos && !datos.enVivo ? 'El detallado solo existe en el mes en vivo: los meses cerrados guardan únicamente los totales por etapa.' : undefined}
+            >
+              <Download size={14} aria-hidden="true" /> Descargar detallado Excel
+            </Button>
+            <Button variant="secondary" onClick={handleExportConsolidadoPdf} disabled={!datos || exportandoExcel || exportandoPdf}>
+              <Download size={14} aria-hidden="true" /> PDF
+            </Button>
           </div>
         </div>
         <ConsolidadoCarteraEtapa data={datos} />

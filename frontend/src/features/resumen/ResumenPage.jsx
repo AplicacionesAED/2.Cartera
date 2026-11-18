@@ -29,6 +29,7 @@ import { SelectorAnio } from '../../components/ui/SelectorAnio.jsx';
 import { MultiSelect } from '../../components/ui/MultiSelect.jsx';
 import { frentesDisponibles as frentesDisponiblesCascada, torresDisponibles, podarSeleccion } from '../../utils/cascadaFiltros.js';
 import { Button } from '../../components/ui/Button.jsx';
+import { SyncModoButton } from '../../components/SyncModoButton.jsx';
 import { Badge } from '../../components/ui/Badge.jsx';
 import { InfoTooltip } from '../../components/ui/InfoTooltip.jsx';
 import { useEstadoRetorno } from '../../hooks/useEstadoRetorno.js';
@@ -40,6 +41,13 @@ import { KpiMatriz } from './KpiMatriz.jsx';
 import { FiltrosActivos } from './FiltrosActivos.jsx';
 import dashStyles from '../dashboard/Dashboard.module.css';
 import styles from './ResumenPage.module.css';
+
+// Formatos de exportación del Consolidado de Baía Kristal (Oliv usa FORMATOS_EXPORTAR_CONSOLIDADO, sin detallado).
+const FORMATOS_EXPORTAR_BAIA = [
+  { value: 'xlsx', label: 'Descargar consolidado Excel', descripcion: 'Hoja de cálculo (.xlsx) con las mismas columnas y valores que ves en pantalla.' },
+  { value: 'xlsx-detalle', label: 'Descargar detallado Excel', descripcion: 'Una sola hoja con cada etapa y debajo sus inmuebles (con referencia de recaudo). Solo en el mes en vivo.' },
+  { value: 'pdf', label: 'Exportar PDF', descripcion: 'Documento horizontal (A4) listo para compartir o imprimir.' },
+];
 
 function fmtMoney(v) {
   if (v == null) return '—';
@@ -256,6 +264,7 @@ export function ResumenPage() {
   const [error, setError] = useState(null);
   const [exportandoPdf, setExportandoPdf] = useState(false);
   const [exportandoExcel, setExportandoExcel] = useState(false);
+  const [formatoExport, setFormatoExport] = useState('xlsx');
 
   // KPIs + tendencia (mismo backend que Dashboard Plan vs. Recaudo)
   const [planRecaudo, setPlanRecaudo] = useState(null);
@@ -567,20 +576,19 @@ export function ResumenPage() {
               />
             </div>
             {datos?.enVivo && <Badge variant="info">En vivo</Badge>}
-            <Button variant="secondary" onClick={() => handleExportConsolidadoExcel(false)} disabled={!datos || exportandoExcel || exportandoPdf}>
-              <Download size={14} aria-hidden="true" /> Descargar consolidado Excel
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => handleExportConsolidadoExcel(true)}
-              disabled={!datos?.enVivo || exportandoExcel || exportandoPdf}
-              title={datos && !datos.enVivo ? 'El detallado solo existe en el mes en vivo: los meses cerrados guardan únicamente los totales por etapa.' : undefined}
-            >
-              <Download size={14} aria-hidden="true" /> Descargar detallado Excel
-            </Button>
-            <Button variant="secondary" onClick={handleExportConsolidadoPdf} disabled={!datos || exportandoExcel || exportandoPdf}>
-              <Download size={14} aria-hidden="true" /> PDF
-            </Button>
+            <SyncModoButton
+              opciones={FORMATOS_EXPORTAR_BAIA}
+              modo={formatoExport}
+              onModo={setFormatoExport}
+              onEjecutar={(fmt) => {
+                if (fmt === 'pdf') return handleExportConsolidadoPdf();
+                if (fmt === 'xlsx-detalle' && !datos?.enVivo) return setError('El detallado solo existe en el mes en vivo: los meses cerrados guardan únicamente los totales por etapa.');
+                return handleExportConsolidadoExcel(fmt === 'xlsx-detalle');
+              }}
+              disabled={!datos || exportandoExcel || exportandoPdf}
+              Icono={Download}
+              ariaLabelFlecha="Elegir formato de exportación"
+            />
           </div>
         </div>
         <ConsolidadoCarteraEtapa data={datos} />

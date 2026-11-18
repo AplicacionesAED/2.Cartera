@@ -5,6 +5,9 @@
 // Cada inmueble aporta por separado; el Consolidado netea por etapa (pendiente = max(0, ventas − recaudo)). Por eso la
 // última columna "Saldo a favor" trae lo que pagó de más cada negocio: Σ pendiente − Σ saldo a favor = pendiente de la etapa.
 const FORMATO_PESOS = '#,##0';
+const FORMATO_UNIDADES = '#,##0';
+const FORMATO_DINERO = '"$" #,##0';
+const FORMATO_FECHA = 'dd/mm/yyyy';
 const FORMATO_PCT = '0.0%';
 const EXCEL_BORDE_GRUPO = { left: { style: 'medium', color: { argb: 'FFC3CBD6' } } };
 const BG_TOTAL = 'FFEEF1F5';
@@ -45,14 +48,19 @@ function valorInmueble(key, u) {
   }
 }
 
-function valorResumen(key, fila) {
-  if (key === 'fechaCorte') return fila.fechaCorte ? new Date(fila.fechaCorte).toLocaleDateString('es-CO') : null;
+export function valorResumen(key, fila) {
+  if (key === 'fechaCorte') return fila.fechaCorte ? new Date(fila.fechaCorte) : null;
   const v = fila[key];
   return v == null || isNaN(v) ? null : v;
 }
 
-// Unidades y pesos comparten el formato con separador de miles.
-const formatoDe = (key) => (CLAVES_PCT.has(key) ? FORMATO_PCT : FORMATO_PESOS);
+// Cada columna con su formato real: unidades = entero, % = porcentaje, fecha = fecha, el resto = dinero.
+const CLAVES_UNIDADES = new Set(['uniTotales', 'uniVendidasFidu', 'uniVendidas', 'uniDisponible']);
+export const formatoDe = (key) => {
+  if (CLAVES_PCT.has(key)) return FORMATO_PCT;
+  if (key === 'fechaCorte') return FORMATO_FECHA;
+  return CLAVES_UNIDADES.has(key) ? FORMATO_UNIDADES : FORMATO_DINERO;
+};
 
 // Vencimiento por cliente (después de "Saldo a favor"): qué sigue sin pagar y qué tan tarde pagó lo pagado.
 const EXTRA_COLUMNAS = [
@@ -164,7 +172,7 @@ export function agregarHojaConsolidadoDetallado(wb, { datos, columnas, grupos, t
     });
     const cf = row.getCell(colFavor);
     cf.value = favor;
-    cf.numFmt = FORMATO_PESOS;
+    cf.numFmt = FORMATO_DINERO;
     cf.alignment = { horizontal: 'right' };
     extras.forEach((v, i) => {
       const ce = row.getCell(colFavor + 1 + i);

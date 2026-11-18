@@ -4,7 +4,7 @@
 //
 // Nombre del archivo: "Consolidado Cartera - <Mes del consolidado> - exportado <AAAA-MM-DD>.xlsx" (igual que el PDF).
 import ExcelJS from 'exceljs';
-import { agregarHojaConsolidadoDetallado } from './desgloseExcel.js';
+import { agregarHojaConsolidadoDetallado, valorResumen, formatoDe } from './desgloseExcel.js';
 
 const EXCEL_BORDE_GRUPO = { left: { style: 'medium', color: { argb: 'FFC3CBD6' } } };
 const EXCEL_BG_TOTAL = 'FFEEF1F5';
@@ -83,7 +83,8 @@ export async function exportarConsolidadoExcel({
     columnas.forEach((col, i) => {
       const g = grupos[col.grupo];
       const cell = row.getCell(i + 2);
-      cell.value = col.render(fila);
+      cell.value = valorResumen(col.key, fila);
+      cell.numFmt = formatoDe(col.key);
       cell.alignment = { horizontal: 'center' };
       if (esTotal) {
         cell.fill = fillSolida(EXCEL_BG_TOTAL);

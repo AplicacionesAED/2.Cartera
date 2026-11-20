@@ -21,6 +21,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { exportarConsolidadoPdf } from './consolidadoPdf.js';
 import { exportarConsolidadoExcel } from './consolidadoExcel.js';
+import { deltaTexto, deltaPctTexto } from './comparacion.js';
 import { Maximize2, Minimize2, Layers, MapPin, Building, X, Download } from 'lucide-react';
 import { Field } from '../../components/ui/Field.jsx';
 import { CampoMes } from '../../components/ui/CampoMes.jsx';
@@ -183,33 +184,7 @@ const TONOS_EXCEL = {
   warning: { bg: 'FFFFF3D6', ink: 'FF8A5A00' },
 };
 
-// Comparación contra el mes anterior: Δ en la unidad de cada columna (los % se restan en puntos porcentuales) y Δ %
-// relativo. Sin fecha de corte. Verde = sube, rojo = baja, gris = igual.
-const CLAVES_PCT_COMPARACION = new Set(['pctRecaudoSobreVentasFiduciaria', 'pctRecaudoSobreCuotaInicial', 'pctCarteraMas5Dias']);
-const CLAVES_UNIDADES_COMPARACION = new Set(['uniTotales', 'uniVendidasFidu', 'uniDisponible']);
-const signo = (n) => (n > 0 ? '+' : n < 0 ? '−' : '');
 const claseDelta = (n) => (n > 0 ? styles.deltaSube : n < 0 ? styles.deltaBaja : styles.deltaIgual);
-function deltaDe(col, actual, previo) {
-  const a = actual[col.key];
-  const b = previo[col.key];
-  if (col.key === 'fechaCorte' || a == null || b == null || isNaN(a) || isNaN(b)) return { texto: '—', n: null };
-  const d = a - b;
-  const redondeado = CLAVES_PCT_COMPARACION.has(col.key) ? Math.round(d * 1000) / 10 : CLAVES_UNIDADES_COMPARACION.has(col.key) ? d : Math.round(d / 1e6) / 1e3;
-  const n = redondeado;
-  const abs = Math.abs(d);
-  if (CLAVES_PCT_COMPARACION.has(col.key)) return { texto: `${signo(n)}${(abs * 100).toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} pp`, n };
-  if (CLAVES_UNIDADES_COMPARACION.has(col.key)) return { texto: `${signo(n)}${formatInt(abs)}`, n };
-  return { texto: `${signo(n)}${formatMM(abs)}`, n };
-}
-function deltaPctDe(col, actual, previo) {
-  const a = actual[col.key];
-  const b = previo[col.key];
-  if (col.key === 'fechaCorte' || CLAVES_PCT_COMPARACION.has(col.key) || a == null || b == null || isNaN(a) || isNaN(b)) return { texto: '—', n: null };
-  if (b === 0) return a === 0 ? { texto: '0,0%', n: 0 } : { texto: '—', n: null };
-  const p = ((a - b) / Math.abs(b)) * 100;
-  const n = Math.round(p * 10) / 10;
-  return { texto: `${signo(n)}${Math.abs(p).toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`, n };
-}
 
 function FilasComparacion({ actual, previo, etiquetaPrevio }) {
   return (
@@ -218,11 +193,11 @@ function FilasComparacion({ actual, previo, etiquetaPrevio }) {
         <td className={`${styles.colSticky} ${styles.colStickyPrevio}`}>TOTAL GENERAL · {etiquetaPrevio}</td>
         {COLUMNAS.map((col) => <td key={col.key} className={`${styles.celda} ${INICIO_DE_GRUPO.has(col.key) ? styles.bordeGrupo : ''}`}>{col.render(previo)}</td>)}
       </tr>
-      {[['Variación (Δ)', deltaDe], ['Variación %', deltaPctDe]].map(([titulo, fn], i) => (
+      {[['Variación (Δ)', deltaTexto], ['Variación %', deltaPctTexto]].map(([titulo, fn], i) => (
         <tr key={titulo} className={`${styles.filaDelta} ${i === 0 ? styles.filaDeltaPrimera : ''}`}>
           <td className={`${styles.colSticky} ${styles.colStickyDelta}`}>{titulo}</td>
           {COLUMNAS.map((col) => {
-            const d = fn(col, actual, previo);
+            const d = fn(col.key, actual[col.key], previo[col.key]);
             return <td key={col.key} className={`${styles.celda} ${INICIO_DE_GRUPO.has(col.key) ? styles.bordeGrupo : ''} ${d.n == null ? styles.deltaIgual : claseDelta(d.n)}`}>{d.texto}</td>;
           })}
         </tr>
@@ -507,7 +482,7 @@ export function ResumenPage() {
     if (!datos) return;
     setExportandoPdf(true);
     try {
-      await exportarConsolidadoPdf({ datos, columnas: COLUMNAS, grupos: GRUPOS, tonos: TONOS_EXCEL, etiquetaEtapa });
+      await exportarConsolidadoPdf({ datos, columnas: COLUMNAS, grupos: GRUPOS, tonos: TONOS_EXCEL, etiquetaEtapa, comparacion });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -522,7 +497,7 @@ export function ResumenPage() {
     try {
       // El detallado (una fila por inmueble) solo existe en vivo: los meses cerrados guardan únicamente los totales por etapa.
       const unidades = detallado && datos.enVivo ? (await getDesgloseConsolidado()).data.unidades : null;
-      await exportarConsolidadoExcel({ datos, columnas: COLUMNAS, grupos: GRUPOS, tonos: TONOS_EXCEL, etiquetaEtapa, unidades });
+      await exportarConsolidadoExcel({ datos, columnas: COLUMNAS, grupos: GRUPOS, tonos: TONOS_EXCEL, etiquetaEtapa, unidades, comparacion });
     } catch (err) {
       setError(err.message);
     } finally {

@@ -4,7 +4,7 @@
 //
 // Nombre del archivo: "Consolidado Cartera - <Mes del consolidado> - exportado <AAAA-MM-DD>.xlsx" (igual que el PDF).
 import ExcelJS from 'exceljs';
-import { agregarHojaConsolidadoDetallado, valorResumen, formatoDe } from './desgloseExcel.js';
+import { agregarHojaConsolidadoDetallado, agregarFilasComparacionExcel, valorResumen, formatoDe } from './desgloseExcel.js';
 
 const EXCEL_BORDE_GRUPO = { left: { style: 'medium', color: { argb: 'FFC3CBD6' } } };
 const EXCEL_BG_TOTAL = 'FFEEF1F5';
@@ -26,13 +26,14 @@ export async function exportarConsolidadoExcel({
   filasDatos = datos.etapas,
   etiquetaFila = (fila) => etiquetaEtapa(fila.etapa),
   prefijoArchivo = 'Consolidado Cartera',
+  comparacion = null, // total del mes anterior: agrega sus filas de comparación bajo el TOTAL GENERAL
   unidades = null, // desglose por inmueble (solo mes en vivo): agrega las hojas de detalle
 }) {
   const inicioDeGrupo = new Set(grupos.map((_, i) => columnas[grupos.slice(0, i).reduce((s, g) => s + g.span, 0)]?.key));
 
   const wb = new ExcelJS.Workbook();
   if (unidades?.length) {
-    agregarHojaConsolidadoDetallado(wb, { datos, columnas, grupos, tonos, unidades, etiquetaEtapa });
+    agregarHojaConsolidadoDetallado(wb, { datos, columnas, grupos, tonos, unidades, etiquetaEtapa, comparacion });
     return descargarLibro(wb, datos, prefijoArchivo);
   }
   const ws = wb.addWorksheet('Consolidado');
@@ -96,6 +97,10 @@ export async function exportarConsolidadoExcel({
       if (inicioDeGrupo.has(col.key)) cell.border = EXCEL_BORDE_GRUPO;
     });
   });
+
+  if (comparacion?.previo?.total) {
+    agregarFilasComparacionExcel(ws, filas.length + 3, { columnas, colInicio: 2, comparacion, total: datos.total, ultimaCol: columnas.length + 1 });
+  }
 
   ws.views = [{ state: 'frozen', xSplit: 1, ySplit: 2 }];
 

@@ -6,6 +6,7 @@
 // (mes que se está viendo, y fecha en que se exportó, en hora de Bogotá).
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { deltaTexto, deltaPctTexto } from './comparacion.js';
 
 const hexARgb = (argb) => [parseInt(argb.slice(2, 4), 16), parseInt(argb.slice(4, 6), 16), parseInt(argb.slice(6, 8), 16)];
 
@@ -54,6 +55,7 @@ export async function exportarConsolidadoPdf({
   etiquetaFila = (fila) => etiquetaEtapa(fila.etapa),
   nota: textoNota = NOTA_BAIA_KRISTAL,
   prefijoArchivo = 'Consolidado Cartera',
+  comparacion = null, // total del mes anterior: agrega sus filas bajo el TOTAL GENERAL
 }) {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const ancho = doc.internal.pageSize.getWidth();
@@ -114,6 +116,25 @@ export async function exportarConsolidadoPdf({
       }),
     ];
   });
+
+  if (comparacion?.previo?.total) {
+    const previo = comparacion.previo.total;
+    const verde = [30, 123, 79];
+    const rojo = [180, 35, 24];
+    cuerpo.push([
+      { content: `TOTAL GENERAL · ${comparacion.etiquetaPrevio}`, styles: { fontStyle: 'bold', halign: 'left', fillColor: [255, 255, 255] } },
+      ...columnas.map((col) => ({ content: String(col.render(previo)), styles: { halign: 'center', fillColor: [255, 255, 255], textColor: [30, 41, 59] } })),
+    ]);
+    [['Variación (Δ)', deltaTexto], ['Variación %', deltaPctTexto]].forEach(([titulo, fn]) => {
+      cuerpo.push([
+        { content: titulo, styles: { fontStyle: 'bold', halign: 'left', fillColor: [255, 243, 214] } },
+        ...columnas.map((col) => {
+          const d = fn(col.key, datos.total[col.key], previo[col.key]);
+          return { content: d.texto, styles: { halign: 'center', fontStyle: 'bold', fillColor: [255, 243, 214], textColor: d.n > 0 ? verde : d.n < 0 ? rojo : [107, 114, 128] } };
+        }),
+      ]);
+    });
+  }
 
   const anchoEtapa = 24;
   const anchoDato = (ancho - margen * 2 - anchoEtapa) / columnas.length;

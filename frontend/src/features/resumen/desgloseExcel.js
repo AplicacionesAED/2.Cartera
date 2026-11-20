@@ -4,6 +4,7 @@
 //
 // Cada inmueble aporta por separado; el Consolidado netea por etapa (pendiente = max(0, ventas − recaudo)). Por eso la
 // última columna "Saldo a favor" trae lo que pagó de más cada negocio: Σ pendiente − Σ saldo a favor = pendiente de la etapa.
+import { deltaExcel, deltaPctExcel } from './comparacion.js';
 const FORMATO_PESOS = '#,##0';
 const FORMATO_UNIDADES = '#,##0';
 // Dinero igual que en pantalla: miles de millones con 3 decimales (el número guardado es el valor real en esa unidad).
@@ -83,7 +84,42 @@ function extrasAgregado(lista) {
   return [null, Math.max(0, ...v.map((u) => u.diasVencimientoActual ?? 0)), Math.max(0, ...v.map((u) => u.maxDiasAtrasoAlPagar ?? 0))];
 }
 
-export function agregarHojaConsolidadoDetallado(wb, { datos, columnas, grupos, tonos, unidades, etiquetaEtapa }) {
+// Filas bajo el TOTAL: el mismo total del mes anterior, Variación (Δ) y Variación % (números reales con su formato;
+// verde sube, rojo baja). `colInicio` = primera columna de cifras; devuelve la fila siguiente a la última escrita.
+export function agregarFilasComparacionExcel(ws, filaInicio, { columnas, colInicio, comparacion, total, ultimaCol }) {
+  const previo = comparacion.previo.total;
+  const BG_DELTA = 'FFFFF3D6';
+  let r = filaInicio;
+
+  const rowPrevio = ws.getRow(r++);
+  rowPrevio.getCell(1).value = `TOTAL GENERAL · ${comparacion.etiquetaPrevio}`;
+  rowPrevio.getCell(1).font = { bold: true };
+  columnas.forEach((col, i) => {
+    const cell = rowPrevio.getCell(colInicio + i);
+    cell.value = valorResumen(col.key, previo);
+    cell.numFmt = formatoDe(col.key);
+    cell.alignment = { horizontal: 'right' };
+  });
+
+  [['Variación (Δ)', deltaExcel], ['Variación %', deltaPctExcel]].forEach(([titulo, fn]) => {
+    const row = ws.getRow(r++);
+    for (let k = 1; k <= ultimaCol; k++) row.getCell(k).fill = fillSolida(BG_DELTA);
+    row.getCell(1).value = titulo;
+    row.getCell(1).font = { bold: true };
+    columnas.forEach((col, i) => {
+      const cell = row.getCell(colInicio + i);
+      const d = fn(col.key, total[col.key], previo[col.key]);
+      cell.alignment = { horizontal: 'right' };
+      if (!d) { cell.value = '—'; cell.font = { color: { argb: 'FF6B7280' } }; return; }
+      cell.value = d.valor;
+      cell.numFmt = d.fmt;
+      cell.font = { bold: true, color: { argb: d.n > 0 ? 'FF1E7B4F' : d.n < 0 ? 'FFB42318' : 'FF6B7280' } };
+    });
+  });
+  return r;
+}
+
+export function agregarHojaConsolidadoDetallado(wb, { datos, columnas, grupos, tonos, unidades, etiquetaEtapa, comparacion = null }) {
   const ws = wb.addWorksheet('Consolidado');
   const nId = ID_COLUMNAS.length;
   const colFavor = nId + columnas.length + 1;
@@ -213,6 +249,11 @@ export function agregarHojaConsolidadoDetallado(wb, { datos, columnas, grupos, t
     favor: unidades.reduce((s, u) => s + (u.saldoAFavor ?? 0), 0) / 1_000_000_000,
     extras: extrasAgregado(unidades),
   });
+
+  if (comparacion?.previo?.total) {
+    // Separada del grupo de inmuebles (nivel de esquema 0) para que no se pliegue con ellos.
+    agregarFilasComparacionExcel(ws, r, { columnas, colInicio: nId + 1, comparacion, total: datos.total, ultimaCol: colFavor + EXTRA_COLUMNAS.length });
+  }
 
   ws.properties.outlineProperties = { summaryBelow: false };
   ws.views = [{ state: 'frozen', xSplit: 1, ySplit: 2 }];

@@ -183,11 +183,59 @@ const TONOS_EXCEL = {
   warning: { bg: 'FFFFF3D6', ink: 'FF8A5A00' },
 };
 
-function FilaEtapa({ fila, esTotal }) {
+// Comparación contra el mes anterior: Δ en la unidad de cada columna (los % se restan en puntos porcentuales) y Δ %
+// relativo. Sin fecha de corte. Verde = sube, rojo = baja, gris = igual.
+const CLAVES_PCT_COMPARACION = new Set(['pctRecaudoSobreVentasFiduciaria', 'pctRecaudoSobreCuotaInicial', 'pctCarteraMas5Dias']);
+const CLAVES_UNIDADES_COMPARACION = new Set(['uniTotales', 'uniVendidasFidu', 'uniDisponible']);
+const signo = (n) => (n > 0 ? '+' : n < 0 ? '−' : '');
+const claseDelta = (n) => (n > 0 ? styles.deltaSube : n < 0 ? styles.deltaBaja : styles.deltaIgual);
+function deltaDe(col, actual, previo) {
+  const a = actual[col.key];
+  const b = previo[col.key];
+  if (col.key === 'fechaCorte' || a == null || b == null || isNaN(a) || isNaN(b)) return { texto: '—', n: null };
+  const d = a - b;
+  const redondeado = CLAVES_PCT_COMPARACION.has(col.key) ? Math.round(d * 1000) / 10 : CLAVES_UNIDADES_COMPARACION.has(col.key) ? d : Math.round(d / 1e6) / 1e3;
+  const n = redondeado;
+  const abs = Math.abs(d);
+  if (CLAVES_PCT_COMPARACION.has(col.key)) return { texto: `${signo(n)}${(abs * 100).toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} pp`, n };
+  if (CLAVES_UNIDADES_COMPARACION.has(col.key)) return { texto: `${signo(n)}${formatInt(abs)}`, n };
+  return { texto: `${signo(n)}${formatMM(abs)}`, n };
+}
+function deltaPctDe(col, actual, previo) {
+  const a = actual[col.key];
+  const b = previo[col.key];
+  if (col.key === 'fechaCorte' || CLAVES_PCT_COMPARACION.has(col.key) || a == null || b == null || isNaN(a) || isNaN(b)) return { texto: '—', n: null };
+  if (b === 0) return a === 0 ? { texto: '0,0%', n: 0 } : { texto: '—', n: null };
+  const p = ((a - b) / Math.abs(b)) * 100;
+  const n = Math.round(p * 10) / 10;
+  return { texto: `${signo(n)}${Math.abs(p).toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`, n };
+}
+
+function FilasComparacion({ actual, previo, etiquetaPrevio }) {
+  return (
+    <>
+      <tr className={styles.filaPrevio}>
+        <td className={`${styles.colSticky} ${styles.colStickyPrevio}`}>TOTAL GENERAL · {etiquetaPrevio}</td>
+        {COLUMNAS.map((col) => <td key={col.key} className={`${styles.celda} ${INICIO_DE_GRUPO.has(col.key) ? styles.bordeGrupo : ''}`}>{col.render(previo)}</td>)}
+      </tr>
+      {[['Variación (Δ)', deltaDe], ['Variación %', deltaPctDe]].map(([titulo, fn], i) => (
+        <tr key={titulo} className={`${styles.filaDelta} ${i === 0 ? styles.filaDeltaPrimera : ''}`}>
+          <td className={`${styles.colSticky} ${styles.colStickyDelta}`}>{titulo}</td>
+          {COLUMNAS.map((col) => {
+            const d = fn(col, actual, previo);
+            return <td key={col.key} className={`${styles.celda} ${INICIO_DE_GRUPO.has(col.key) ? styles.bordeGrupo : ''} ${d.n == null ? styles.deltaIgual : claseDelta(d.n)}`}>{d.texto}</td>;
+          })}
+        </tr>
+      ))}
+    </>
+  );
+}
+
+function FilaEtapa({ fila, esTotal, etiquetaTotal }) {
   return (
     <tr className={esTotal ? styles.filaTotal : styles.fila}>
       <td className={`${styles.colSticky} ${esTotal ? styles.colStickyTotal : ''}`}>
-        {esTotal ? 'TOTAL GENERAL' : etiquetaEtapa(fila.etapa)}
+        {esTotal ? (etiquetaTotal ?? 'TOTAL GENERAL') : etiquetaEtapa(fila.etapa)}
       </td>
       {COLUMNAS.map((col) => {
         const g = GRUPOS[col.grupo];
@@ -201,7 +249,7 @@ function FilaEtapa({ fila, esTotal }) {
   );
 }
 
-function ConsolidadoCarteraEtapa({ data }) {
+function ConsolidadoCarteraEtapa({ data, comparacion }) {
   if (data === null) return <p className={dashStyles.loadingState}>Cargando Consolidado de Cartera…</p>;
   if (!data.etapas?.length) return <p className={dashStyles.emptyHint}>Sin datos.</p>;
 
@@ -242,7 +290,8 @@ function ConsolidadoCarteraEtapa({ data }) {
           </thead>
           <tbody>
             {data.etapas.map((fila) => <FilaEtapa key={fila.etapa} fila={fila} />)}
-            <FilaEtapa fila={data.total} esTotal />
+            <FilaEtapa fila={data.total} esTotal etiquetaTotal={comparacion ? `TOTAL GENERAL · ${comparacion.etiquetaActual}` : undefined} />
+            {comparacion && <FilasComparacion actual={data.total} previo={comparacion.previo.total} etiquetaPrevio={comparacion.etiquetaPrevio} />}
           </tbody>
         </table>
       </div>
@@ -261,6 +310,8 @@ export function ResumenPage() {
   const [meses, setMeses] = useState([]);
   const [mes, setMes] = useEstadoRetorno('resumen:mes', '');
   const [datos, setDatos] = useState(null);
+  const [comparar, setComparar] = useState(false);
+  const [datosPrevio, setDatosPrevio] = useState(null);
   const [error, setError] = useState(null);
   const [exportandoPdf, setExportandoPdf] = useState(false);
   const [exportandoExcel, setExportandoExcel] = useState(false);
@@ -298,6 +349,22 @@ export function ResumenPage() {
     setDatos(null);
     getResumenEtapas(mes).then((res) => setDatos(res.data)).catch((err) => setError(err.message));
   }, [mes]);
+
+  // Mes inmediatamente anterior (entre los que tienen cierre guardado) para la comparación del Consolidado.
+  const mesAnterior = useMemo(() => {
+    const orden = meses.map((m) => m.mes).sort();
+    const i = orden.indexOf(mes);
+    return i > 0 ? orden[i - 1] : null;
+  }, [meses, mes]);
+  const etiquetaMes = (v) => meses.find((m) => m.mes === v)?.etiqueta ?? etiquetaMesLarga(v);
+  useEffect(() => {
+    setDatosPrevio(null);
+    if (!comparar || !mesAnterior) return;
+    getResumenEtapas(mesAnterior).then((res) => setDatosPrevio(res.data)).catch((err) => setError(err.message));
+  }, [comparar, mesAnterior]);
+  const comparacion = comparar && mesAnterior && datosPrevio?.total
+    ? { previo: datosPrevio, etiquetaPrevio: etiquetaMes(mesAnterior), etiquetaActual: etiquetaMes(mes) }
+    : null;
 
   useEffect(() => {
     let vigente = true;
@@ -575,6 +642,10 @@ export function ResumenPage() {
                 etiqueta={(v) => meses.find((m) => m.mes === v)?.etiqueta ?? etiquetaMesLarga(v)}
               />
             </div>
+            <label className={styles.compararCheck} title={mesAnterior ? undefined : 'No hay un mes anterior guardado para comparar.'}>
+              <input type="checkbox" checked={comparar && !!mesAnterior} disabled={!mesAnterior} onChange={(e) => setComparar(e.target.checked)} />
+              Comparar con {mesAnterior ? etiquetaMes(mesAnterior) : 'mes anterior'}
+            </label>
             {datos?.enVivo && <Badge variant="info">En vivo</Badge>}
             <SyncModoButton
               opciones={FORMATOS_EXPORTAR_BAIA}
@@ -591,7 +662,7 @@ export function ResumenPage() {
             />
           </div>
         </div>
-        <ConsolidadoCarteraEtapa data={datos} />
+        <ConsolidadoCarteraEtapa data={datos} comparacion={comparacion} />
         {meses.length <= 1 && <p className={styles.avisoMeses}>Todavía no hay meses cerrados para navegar -- se va a ir guardando una foto automáticamente al cierre de cada mes.</p>}
       </div>
 

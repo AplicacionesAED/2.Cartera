@@ -239,6 +239,19 @@
   cursor: progress;
 }
 
+/* Entrada por el portal AED (solo con PORTAL_AUTH=optional): secundario, debajo de "Ingresar". */
+.portal {
+  height: 50px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--color-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-body-size);
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .footnote {
   margin: 0;
   text-align: center;

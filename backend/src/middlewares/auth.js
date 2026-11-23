@@ -4,6 +4,7 @@
 // "Roles y permisos dinámicos".
 const crypto = require('crypto');
 const { decodeToken, ACCESS_COOKIE_NAME } = require('../utils/security');
+const portalAuth = require('../utils/portalAuth');
 const ApiError = require('../utils/ApiError');
 const Usuario = require('../modules/usuario/usuario.model');
 const { tienePermiso, getRolesPermisos, resolverEsAdmin } = require('../utils/permisos');
@@ -13,6 +14,9 @@ function esRutaPermitidaConCambioPendiente(originalUrl) {
   return /\/api\/auth\//.test(ruta) || /\/api\/usuarios\/me$/.test(ruta);
 }
 
+// Nombre de esta app en el portal (el portal le da acceso a la gente con este nombre).
+const APP_PORTAL = 'cartera';
+
 // Lee el access_token de la cookie httpOnly, decodifica el JWT y adjunta el
 // usuario activo a req.usuario. Los permisos se re-leen de la BD (nunca se
 // confia en el claim del JWT) para que un token manipulado no pueda escalar
@@ -21,6 +25,32 @@ function esRutaPermitidaConCambioPendiente(originalUrl) {
 // string 'ADMIN') -- pedido explicito del usuario (2026-09-18): renombrar
 // ese rol no debe romper el bypass de administrador de nadie.
 async function requireAuthInterno(req, res, next) {
+  // Con el portal activo (PORTAL_AUTH=optional|required) la identidad sale de la sesion del portal: aqui solo se busca a la persona por
+  // su correo y se le aplican los roles y permisos de esta app (que siguen siendo de Cartera). `optional` cae al login propio si no hay
+  // sesion del portal; `required` no. Quien entra por el portal no usa la contraseña de Cartera: su cambio pendiente no lo frena
+  // (`viaPortal`, ver getMe en usuario.service.js).
+  const modo = portalAuth.modo();
+  if (modo !== 'off') {
+    const sesion = await portalAuth.resolverSesion(req, APP_PORTAL);
+    const usuarioPortal = sesion.estado === 'ok' ? await Usuario.findOne({ where: { email: sesion.email, activo: true } }) : null;
+    if (usuarioPortal) {
+      usuarioPortal.esAdmin = await resolverEsAdmin(usuarioPortal.roles);
+      usuarioPortal.viaPortal = true;
+      req.usuario = usuarioPortal;
+      return next();
+    }
+
+    // Sin entrar por el portal: en `optional`, quien ya tiene su sesion propia sigue con ella (que el portal no le de la app no debe
+    // sacarlo de lo que ya usa durante la transicion); en `required` no hay otra puerta.
+    const conSesionPropia = modo === 'optional' && Boolean(req.cookies?.[ACCESS_COOKIE_NAME]);
+    if (!conSesionPropia) {
+      if (sesion.estado === 'cambiar-password') return next(new ApiError(403, 'Debes cambiar tu contraseña en el portal antes de continuar'));
+      if (sesion.estado === 'sin-acceso') return next(new ApiError(403, 'El portal no te da acceso a Cartera. Pide acceso a TI.'));
+      if (sesion.estado === 'ok') return next(new ApiError(403, 'Tienes acceso en el portal, pero aún no existe un usuario de Cartera para tu correo. Pide a un administrador que lo cree.'));
+      return next(new ApiError(401, 'No autenticado'));
+    }
+  }
+
   const token = req.cookies?.[ACCESS_COOKIE_NAME];
   if (!token) return next(new ApiError(401, 'No autenticado'));
 

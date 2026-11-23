@@ -11,6 +11,16 @@ export function logout() {
   return client.post('/auth/logout');
 }
 
+// Modo de acceso del servidor (off | optional | required): si Cartera usa su login propio o la sesion del portal.
+export function getModo() {
+  return client.get('/auth/modo');
+}
+
+// Cierra la sesion del portal (ruta absoluta del gateway: el portal vive en el mismo dominio, fuera del prefijo de esta app).
+export function logoutPortal() {
+  return fetch('/portal/api/auth/logout', { method: 'POST', credentials: 'include' });
+}
+
 export function cambiarPassword(nuevaPassword) {
   return client.post('/auth/cambiar-password', { nueva_password: nuevaPassword });
 }

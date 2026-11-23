@@ -58,8 +58,14 @@ async function _registrarAuditoria(actorId, usuarioId, accion, detalle = null) {
 // columna del modelo Usuario, hay que copiarlo aparte. El frontend lo usa en
 // vez de `roles.includes('ADMIN')` para que renombrar ese rol no le quite
 // acceso a nadie (pedido explicito del usuario, 2026-09-18).
+// Quien entra por el portal (`viaPortal`, ver requireAuth) no usa la contraseña de Cartera: no se le pide cambiarla.
 async function getMe(usuario) {
-  return { ..._enrich(usuario), permisosPorRol: await getRolesPermisos(), esAdmin: usuario.esAdmin };
+  return {
+    ..._enrich(usuario),
+    ...(usuario.viaPortal && { debe_cambiar_password: false }),
+    permisosPorRol: await getRolesPermisos(),
+    esAdmin: usuario.esAdmin,
+  };
 }
 
 async function list() {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Building2, Eye, EyeOff, FileSpreadsheet, Landmark, Lock, Mail } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext.jsx';
@@ -16,8 +16,11 @@ const BENEFICIOS = [
   { icono: FileSpreadsheet, texto: 'Cartera en mora y resumen' },
 ];
 
+// Login del portal (ruta absoluta del gateway, fuera del prefijo de esta app) y vuelta a Cartera despues de entrar.
+const URL_LOGIN_PORTAL = `/login?next=${encodeURIComponent(import.meta.env.BASE_URL)}`;
+
 export function LoginPage() {
-  const { login } = useAuth();
+  const { login, modo, cargando } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState('');
@@ -42,6 +45,51 @@ export function LoginPage() {
     } finally {
       setEnviando(false);
     }
+  }
+
+  // Con el portal obligatorio Cartera ya no tiene login propio: se manda directo al del portal. Solo si vive bajo un prefijo detras del
+  // gateway (/cartera/): abierta por su propio dominio, `/login` seria esta misma pantalla y el redireccionamiento daria vueltas.
+  // Antes de redirigir se pregunta al PORTAL si hay sesion: si no la hay, a su login (sin mensajes). Si la hay y Cartera igual no la
+  // reconocio, redirigir daria vueltas sin fin (el portal devolveria a Cartera); ahi solo se explica.
+  const detrasDelPortal = import.meta.env.BASE_URL !== '/';
+  const [sesionPortalValida, setSesionPortalValida] = useState(false);
+  useEffect(() => {
+    if (cargando || modo !== 'required' || !detrasDelPortal) return undefined;
+    let activo = true;
+    fetch('/portal/api/me', { credentials: 'include' })
+      .then((res) => res.ok)
+      .catch(() => false)
+      .then((valida) => {
+        if (!activo) return;
+        if (valida) setSesionPortalValida(true);
+        else window.location.replace(URL_LOGIN_PORTAL);
+      });
+    return () => {
+      activo = false;
+    };
+  }, [cargando, modo, detrasDelPortal]);
+  if (cargando || (modo === 'required' && detrasDelPortal && !sesionPortalValida)) return null;
+  if (sesionPortalValida) {
+    return (
+      <div role="alert" style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, textAlign: 'center' }}>
+        <div style={{ maxWidth: 440 }}>
+          <h1 style={{ fontSize: 20, margin: '0 0 8px' }}>Cartera no pudo validar tu sesión</h1>
+          <p style={{ margin: '0 0 16px', color: 'var(--color-ink-secondary)' }}>
+            Tu sesión del portal es válida, pero Cartera no pudo verificarla. Intenta de nuevo en unos minutos; si sigue igual, avisa a TI.
+          </p>
+          <a href="/">Volver al portal</a>
+        </div>
+      </div>
+    );
+  }
+  if (modo === 'required') {
+    return (
+      <div role="alert" style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, textAlign: 'center' }}>
+        <p>
+          Cartera se abre desde el portal: <a href="https://portal.aed-it.com">portal.aed-it.com</a>
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -132,6 +180,11 @@ export function LoginPage() {
           <button type="submit" className={styles.submit} disabled={enviando}>
             {enviando ? 'Ingresando…' : 'Ingresar'}
           </button>
+          {modo === 'optional' && (
+            <button type="button" className={styles.portal} onClick={() => window.location.assign(URL_LOGIN_PORTAL)}>
+              Entrar con el portal AED
+            </button>
+          )}
 
           <p className={styles.footnote}>¿Problemas para ingresar? Escribe al administrador del sistema.</p>
         </form>

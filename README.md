@@ -94,3 +94,9 @@ refresco directo en ruta profunda, logo, API y cookies (`path=/cartera/`, `Secur
 
 Variable de entorno `INTEGRACION_API_KEY` (≥ 32 caracteres). n8n envía `X-API-Key: <llave>` a
 `POST /cartera/api/fiducia/upload` (multipart, campo `archivo`).
+
+## Login global del portal
+
+Cartera puede aceptar la sesión del portal AED (`portal.aed-it.com`) en lugar de su login propio. Se controla con la variable `PORTAL_AUTH` del backend (el frontend lo lee de `GET /api/auth/modo`, sin recompilar): `off` (por defecto, solo el login propio con correo y contraseña), `optional` (acepta ambos; el login suma "Entrar con el portal AED") y `required` (solo el portal: el login propio, el refresh y el cambio de contraseña responden 410, y `/login` manda al del portal).
+
+El portal solo dice **quién** es la persona y si le da acceso a Cartera; los roles y permisos siguen siendo de Cartera: la persona se busca por correo en `usuarios` y, si no existe, ve que debe pedir a un administrador que la cree. Quien entra por el portal no usa la contraseña de Cartera (no se le pide el cambio del primer ingreso). La carga de la fiduciaria con `X-API-Key` no cambia. La verificación está en `backend/src/utils/portalAuth.js` (copia idéntica en todas las apps; la fuente y sus pruebas están en `0. PLATAFORMA AED/auth/cliente/`) y se aplica en `backend/src/middlewares/auth.js`. Plan completo: `0. PLATAFORMA AED/docs/PLAN-LOGIN-GLOBAL.md`.

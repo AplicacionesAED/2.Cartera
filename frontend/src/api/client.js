@@ -18,16 +18,28 @@ export function setSessionExpiredHandler(fn) {
 // Devuelve 'ok' (cookie renovada), 'invalid' (el servidor RECHAZÓ el refresh:
 // la sesión de verdad terminó) o 'error' (red caída, 502/503, timeout: la
 // sesión puede seguir viva, así que NO se debe cerrar).
+// Modo de acceso (off | optional | required), lo fija AuthProvider al arrancar. Con el portal activo la sesion se renueva en el portal
+// (ruta absoluta del gateway, mismo dominio); en `optional` si el portal no la renueva se intenta con el login propio.
+let modoPortal = 'off';
+export function setModoPortal(modo) {
+  modoPortal = modo;
+}
+
+const renovar = (url) =>
+  fetch(url, { method: 'POST', credentials: 'include' })
+    .then((res) => {
+      if (res.ok) return 'ok';
+      return res.status === 401 || res.status === 403 ? 'invalid' : 'error';
+    })
+    .catch(() => 'error');
+
 let refreshingPromise = null;
 function refreshSession() {
   if (!refreshingPromise) {
-    refreshingPromise = fetch(`${API_BASE_URL}/auth/refresh`, { method: 'POST', credentials: 'include' })
-      .then((res) => {
-        if (res.ok) return 'ok';
-        return res.status === 401 || res.status === 403 ? 'invalid' : 'error';
-      })
-      .catch(() => 'error')
-      .finally(() => { refreshingPromise = null; });
+    const propia = () => renovar(`${API_BASE_URL}/auth/refresh`);
+    refreshingPromise = (
+      modoPortal === 'off' ? propia() : renovar('/portal/api/auth/refresh').then((estado) => (estado === 'ok' || modoPortal === 'required' ? estado : propia()))
+    ).finally(() => { refreshingPromise = null; });
   }
   return refreshingPromise;
 }

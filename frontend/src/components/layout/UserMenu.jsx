@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, LogOut } from 'lucide-react';
+import { ChevronDown, LayoutGrid, LogOut } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext.jsx';
 import styles from './UserMenu.module.css';
 
@@ -18,7 +18,9 @@ function initials(nombre) {
 // cerrar al perder el foco, panel absolute anclado a la derecha del
 // trigger) -- vive en .topbar, junto al bell.
 export function UserMenu() {
-  const { usuario, logout } = useAuth();
+  const { usuario, logout, modo } = useAuth();
+  // Con el portal activo y detras del gateway (/cartera/): hay un acceso al portal y el cierre de sesion termina en su login.
+  const conPortal = modo !== 'off' && import.meta.env.BASE_URL !== '/';
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
@@ -34,7 +36,9 @@ export function UserMenu() {
   async function handleLogout() {
     setOpen(false);
     await logout();
-    navigate('/login', { replace: true });
+    // El login ES el del portal (ruta absoluta del gateway), sin `next`: tras entrar de nuevo se llega a la landing, no a esta app.
+    if (conPortal) window.location.assign('/login');
+    else navigate('/login', { replace: true });
   }
 
   return (
@@ -54,6 +58,12 @@ export function UserMenu() {
             <span className={styles.panelEmail}>{usuario.email}</span>
           </div>
 
+          {conPortal && (
+            <a href="/" role="menuitem" className={styles.item}>
+              <LayoutGrid size={16} strokeWidth={1.75} aria-hidden="true" />
+              Portal AED
+            </a>
+          )}
           <button type="button" role="menuitem" className={styles.item} onClick={handleLogout}>
             <LogOut size={16} strokeWidth={1.75} aria-hidden="true" />
             Cerrar sesión

@@ -53,6 +53,11 @@ precalentado. El refresh token de Zoho no tiene el scope `ZohoCRM.settings.field
   `ok(res, data)` envuelve en `{ data }`.
 - CORS expone `Content-Disposition` (`exposedHeaders`): sin eso el navegador no lee el nombre de un archivo descargado.
 - Cookies `cartera_access_token`/`cartera_refresh_token` (prefijo obligatorio por proyecto).
+- **Login global del portal** (nov 2026): `PORTAL_AUTH=off|optional|required` (backend; el frontend lo lee de `GET /api/auth/modo`).
+  `requireAuth` acepta la sesión del portal (`utils/portalAuth.js`, copia idéntica de `0. PLATAFORMA AED/auth/cliente/`, **no se
+  edita aquí**; app `cartera`) y busca a la persona por correo; roles y permisos siguen siendo de Cartera. En `required` el login,
+  el refresh y el cambio de contraseña propios responden 410. Quien entra por el portal lleva `usuario.viaPortal` y no se le exige
+  el cambio de contraseña de Cartera. Detalle en `README.md`.
 - **Usuarios y permisos**: `usuarios.roles` = arreglo de nombres (`ADMIN` reservado, bypass); cada rol es una fila de `roles` con
   `permisos` (claves de `config/modulos.js`: `negocios`, `oportunidades`, `inventario`, `encargos`, `movimientos`, `resumen`,
   `dashboard`, `cartera-mora`, `otrosies`, `oliv-*`, `accesos-usuarios`, `accesos-roles`). `requireModulo`/`requireAdmin`
